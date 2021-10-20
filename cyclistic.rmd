@@ -2,21 +2,56 @@
 knitr::opts_chunk$set(echo = TRUE)
 install.packages("ggplot2", repos = "http://cran.us.r-project.org")
 library(ggplot2)
+library(dplyr)
 ```
-## Cyclistic
+# Cyclistic
+- Anar Seyf (anar.seyf@gmail.com)
+- October 2021
+- Capstone project | Google Data Analytics course #8 | Coursera
 
 ### The Data
 
-Here it is.
+#### Duration by weekday
 
 ```{r, echo = FALSE}
 d <- read.csv("avg-duration-by-weekday.csv")
-head(d)
+head(d, n = 3)
+```
+
+#### Aggregate: daily duration and count
+```{r, echo = FALSE}
+agg <- read.csv("agg_daily_duration_count.csv")
+head(agg, n = 3)
 ```
 
 ### The Graphs
+
+#### Aggregate by day of week
+
+Note: February, non-member: abnormally high duration.
+
+```{r, include = FALSE}
+agg2 <- agg %>%
+  group_by(YEAR_MONTH, DAYOFWEEK, IS_MEMBER) %>%
+  summarise(MEAN_DURATION = mean(AVG_DURATION), MEAN_COUNT = mean(COUNT))
+```
+
 ```{r, echo = FALSE}
-ggplot(data = d, aes(x = WEEKDAY, y = AVG_DURATION, color = is_member)) +
+ggplot(data = agg2, aes(x = DAYOFWEEK, y = MEAN_COUNT, color = IS_MEMBER, size = MEAN_DURATION)) +
   geom_point() +
-  facet_wrap(~MONTH)
+  facet_wrap(~YEAR_MONTH, ncol = 3)
+```
+
+#### Weather
+
+```{r, echo = FALSE}
+weather <- read.csv("agg-daily-trips-weather.csv")
+weather %>%
+  select(-wind_2min_peak, -temp_min, -temp_max) %>%
+  head(n = 3)
+```
+
+```{r fig, out.width='50%', out.aspect=0.3, echo = FALSE}
+ggplot(data = weather, aes(x = temp_avg, y = COUNT, color = IS_MEMBER, size = AVG_DURATION)) +
+  geom_point()
 ```

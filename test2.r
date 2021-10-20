@@ -1,4 +1,4 @@
-install.packages("Tmisc")
+install.packages("Tmisc", repos = "http://cran.us.r-project.org")
 library(Tmisc)
 data(quartet)
 
