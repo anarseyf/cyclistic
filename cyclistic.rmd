@@ -1,11 +1,21 @@
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+install.packages("ggplot2", repos = "http://cran.us.r-project.org")
+library(ggplot2)
+```
 ## Cyclistic
 
 ### The Data
 
-```{r ggplot attempt}
-# library(ggplot2)
+Here it is.
+
+```{r, echo = FALSE}
 d <- read.csv("avg-duration-by-weekday.csv")
 head(d)
+```
+
+### The Graphs
+```{r, echo = FALSE}
 ggplot(data = d, aes(x = WEEKDAY, y = AVG_DURATION, color = is_member)) +
   geom_point() +
   facet_wrap(~MONTH)
