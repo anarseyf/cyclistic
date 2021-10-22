@@ -10,6 +10,7 @@ library(dplyr)
 - October 2021
 - Capstone project | Google Data Analytics course #8 | Coursera
 
+
 ## The Data
 
 #### Duration by weekday
@@ -24,6 +25,7 @@ head(d, n = 3)
 agg_daily <- read.csv("agg_daily_duration_count.csv")
 head(agg_daily, n = 3)
 ```
+
 
 ## The Graphs
 
@@ -43,9 +45,10 @@ ggplot(data = agg_summarized, aes(x = DAYOFWEEK, y = MEAN_COUNT, color = IS_MEMB
   facet_wrap(~YEAR_MONTH, ncol = 3)
 ```
 
-### Year
 
-#### Total Counts
+#### Total Counts and Average Duration
+
+Full year, weekly.
 
 ```{r fig1, echo = FALSE, fig.width=3, fig.height=6}
 agg_weekly <- read.csv("agg_weekly_duration_count_INCORRECT.csv")
@@ -54,13 +57,11 @@ ggplot(data = agg_weekly, aes(y = factor(WEEK, levels = unique(rev(WEEK))), x = 
   geom_col() +
   theme(legend.position = "none")
 ```
-
-#### Average Duration
-
-```{r, echo = FALSE}
+```{r, echo = FALSE, fig.width=4, fig.height=6}
 ggplot(data = agg_weekly, aes(y = factor(WEEK, levels = unique(rev(WEEK))), x = avg_duration, fill = IS_MEMBER)) +
   geom_col(width = 1, position = position_dodge(0.5))
 ```
+
 
 ## The Weather
 
@@ -71,7 +72,10 @@ weather %>%
   head(n = 3)
 ```
 
+
 #### Temperature
+
+In degrees C.
 
 ```{r, out.width='49%', out.aspect=0.3, echo = FALSE}
 
@@ -82,6 +86,16 @@ ggplot(data = weather, aes(x = temp_avg, y = COUNT, color = IS_MEMBER, size = AV
 ggplot(data = weather, aes(x = temp_avg, fill = IS_MEMBER, size = AVG_DURATION)) +
   geom_histogram(binwidth = 1)
 ```
+
+```{r, out.width='45%', echo = FALSE}
+weather %>%
+  ggplot(aes(x = temp_avg, y = COUNT, fill = IS_MEMBER, size = AVG_DURATION)) +
+  geom_col(position = "fill") +
+  scale_x_binned() +
+  scale_y_continuous(labels = scales::percent) +
+  theme(legend.position = "none")
+```
+
 
 #### Rain
 
@@ -105,13 +119,14 @@ weather %>%
   scale_fill_brewer(palette = "Pastel1")
 ```
 
+
 #### Wind
 
 Wind (m/s) vs ride count.
 
 Second graph is scaled to 100% to show member vs casual share.
 
-```{r, out.width='45%', echo = FALSE}
+```{r, out.width='35%', echo = FALSE}
 weather %>%
   filter(wind_avg <= 10) %>%
   ggplot(aes(x = wind_avg, y = COUNT, fill = IS_MEMBER, size = AVG_DURATION)) +
@@ -119,7 +134,7 @@ weather %>%
   scale_x_binned() +
   scale_fill_brewer(palette = "Pastel1")
 ```
-```{r, out.width='45%', echo = FALSE}
+```{r, out.width='30%', echo = FALSE}
 weather %>%
   filter(wind_avg <= 10) %>%
   ggplot(aes(x = wind_avg, y = COUNT, fill = IS_MEMBER, size = AVG_DURATION)) +
