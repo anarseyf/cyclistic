@@ -36,9 +36,7 @@ head(agg_daily, n = 3)
 
 #### Aggregate by day of week
 
-Note: February, non-member: abnormally high duration.
-
-```{r, include = FALSE}
+```{r, echo = FALSE}
 agg_summarized <- agg_daily %>%
   group_by(YEAR_MONTH, DAYOFWEEK, IS_MEMBER) %>%
   summarize(MEAN_DURATION = mean(AVG_DURATION), MEAN_COUNT = mean(COUNT))
@@ -74,18 +72,36 @@ plot %>%
 #### Total Counts and Average Duration
 
 Full year, weekly.
+```{r, echo=FALSE, fig.width=8, fig.height=2}
+head(agg_daily_computed_weekdays)
 
-```{r fig1, echo = FALSE, fig.width=3, fig.height=6}
-agg_weekly <- read.csv("agg_weekly_duration_count_INCORRECT.csv")
-head(agg_weekly, n = 3)
-ggplot(data = agg_weekly, aes(y = factor(WEEK, levels = unique(rev(WEEK))), x = total_count, fill = IS_MEMBER)) +
-  geom_col() +
+agg_daily_computed_weekdays %>%
+  ggplot(aes(
+    x = factor(weeknum, levels = unique(weeknum)),
+    y = COUNT,
+    fill = IS_MEMBER
+  )) +
+  geom_bar(stat = "identity") +
   theme(legend.position = "none")
 ```
-```{r, echo = FALSE, fig.width=4, fig.height=6}
-ggplot(data = agg_weekly, aes(y = factor(WEEK, levels = unique(rev(WEEK))), x = avg_duration, fill = IS_MEMBER)) +
-  geom_col(width = 1, position = position_dodge(0.5))
+
+```{r, echo = FALSE, fig.width=8, fig.height=2}
+# y = factor(weeknum, levels = unique(rev(weeknum)))
+agg_daily_computed_weekdays %>%
+  select(-STDDEV_DURATION, -MIN_DURATION, -MAX_DURATION) %>%
+  group_by(weeknum, IS_MEMBER) %>%
+  summarize(WEEKLY_AVG_DURATION = mean(AVG_DURATION)) %>%
+  ggplot(aes(
+    x = factor(weeknum, levels = unique(weeknum)),
+    y = WEEKLY_AVG_DURATION,
+    fill = IS_MEMBER
+  )) +
+  geom_bar(stat = "identity") +
+  theme(legend.position = "none")
 ```
+
+Note: not weighted average for the graph above.
+
 
 
 ## The Weather
