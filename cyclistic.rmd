@@ -1,5 +1,5 @@
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = FALSE, warning = TRUE, message = FALSE)
 install.packages("ggplot2", repos = "http://cran.us.r-project.org")
 library(ggplot2)
 library(dplyr)
@@ -15,65 +15,88 @@ library(dplyr)
 
 #### Duration by weekday
 
-```{r, echo = FALSE}
+```{r}
 agg_daily_computed_weekdays <- read.csv("agg_daily_computed_weekdays.csv")
-head(agg_daily_computed_weekdays, n = 3)
+head(agg_daily_computed_weekdays, n = 2)
 ```
 
 #### Aggregate: daily duration and count
-```{r, echo = FALSE}
+```{r}
 agg_daily <- read.csv("agg_daily_duration_count.csv")
-head(agg_daily, n = 3)
+head(agg_daily, n = 2)
 ```
 
 #### Aggregate: daily duration and count
-```{r, echo = FALSE}
+```{r}
 agg_daily <- read.csv("agg_daily_duration_count.csv")
-head(agg_daily, n = 3)
+head(agg_daily, n = 2)
+```
+
+#### Aggregate: hourly by weekday
+```{r}
+agg_hourly <- read.csv("agg_hourly_status.csv")
+head(agg_hourly, n = 2)
 ```
 
 ## The Graphs
 
 #### Aggregate by day of week
 
-```{r, echo = FALSE}
+```{r}
 agg_summarized <- agg_daily %>%
   group_by(YEAR_MONTH, DAYOFWEEK, IS_MEMBER) %>%
   summarize(MEAN_DURATION = mean(AVG_DURATION), MEAN_COUNT = mean(COUNT))
-head(agg_daily)
-head(agg_summarized)
+head(agg_summarized, n = 2)
 ```
 
-#### Monthly
+#### Monthly by weekday
 
-```{r, echo = FALSE}
+```{r}
 plot <- agg_daily_computed_weekdays %>%
   group_by(year_month, dayofweek, IS_MEMBER) %>%
   summarize(AVG_COUNT = mean(COUNT), AVG_DURATION = mean(AVG_DURATION))
-head(plot)
+
+head(plot, n = 2)
+
 plot %>%
   ggplot(aes(x = dayofweek, y = AVG_COUNT, color = IS_MEMBER, size = AVG_DURATION)) +
   geom_point() +
   facet_wrap(~year_month, ncol = 3)
 ```
 
-#### Overall
+#### Overall by weekday
 
-```{r, echo = FALSE}
+```{r, fig.width = 3, fig.height = 2}
 plot <- agg_daily_computed_weekdays %>%
   group_by(dayofweek, IS_MEMBER) %>%
   summarize(AVG_COUNT = mean(COUNT), AVG_DURATION = mean(AVG_DURATION))
-head(plot)
+
+head(plot, n = 2)
+
 plot %>%
   ggplot(aes(x = dayofweek, y = AVG_COUNT, color = IS_MEMBER, size = AVG_DURATION)) +
-  geom_point()
+  geom_point() +
+  theme(legend.position = "none")
 ```
 
-#### Total Counts and Average Duration
+#### Hourly
+
+```{r, fig.width=8, fig.height=4}
+agg_hourly %>%
+  ggplot(aes(
+    x = hour,
+    y = factor(dayofweek, levels = unique(rev(dayofweek))),
+    color = IS_MEMBER, size = COUNT
+  )) +
+  geom_point(position = position_dodge(width = 0.5), alpha = 0.8)
+# scale_color_brewer(palette = "Pastel1")
+```
+
+#### Weekly Counts and Average Duration
 
 Full year, weekly.
 ```{r, echo=FALSE, fig.width=8, fig.height=2}
-head(agg_daily_computed_weekdays)
+head(agg_daily_computed_weekdays, n = 2)
 
 agg_daily_computed_weekdays %>%
   ggplot(aes(
@@ -85,10 +108,10 @@ agg_daily_computed_weekdays %>%
   theme(legend.position = "none")
 ```
 
-```{r, echo = FALSE, fig.width=8, fig.height=2}
+```{r, fig.width=8, fig.height=2}
 # y = factor(weeknum, levels = unique(rev(weeknum)))
 agg_daily_computed_weekdays %>%
-  select(-STDDEV_DURATION, -MIN_DURATION, -MAX_DURATION) %>%
+  # select(-STDDEV_DURATION, -MIN_DURATION, -MAX_DURATION) %>%
   group_by(weeknum, IS_MEMBER) %>%
   summarize(WEEKLY_AVG_DURATION = mean(AVG_DURATION)) %>%
   ggplot(aes(
@@ -100,17 +123,18 @@ agg_daily_computed_weekdays %>%
   theme(legend.position = "none")
 ```
 
-Note: not weighted average for the graph above.
-
+Note: **not weighted average** for the graph above.
 
 
 ## The Weather
 
-```{r, echo = FALSE}
+**TODO: Recompute** on new daily aggregates.
+
+```{r}
 weather <- read.csv("agg-daily-trips-weather.csv")
 weather %>%
   select(-wind_2min_peak, -temp_min, -temp_max) %>%
-  head(n = 3)
+  head(n = 2)
 ```
 
 
@@ -118,17 +142,17 @@ weather %>%
 
 In degrees C.
 
-```{r, out.width='49%', out.aspect=0.3, echo = FALSE}
+```{r, out.width='49%', out.aspect=0.3}
 
 ggplot(data = weather, aes(x = temp_avg, y = COUNT, color = IS_MEMBER, size = AVG_DURATION)) +
   geom_point()
 ```
-```{r, out.width='49%', out.aspect=0.3, echo = FALSE}
+```{r, out.width='49%', out.aspect=0.3}
 ggplot(data = weather, aes(x = temp_avg, fill = IS_MEMBER, size = AVG_DURATION)) +
   geom_histogram(binwidth = 1)
 ```
 
-```{r, out.width='45%', echo = FALSE}
+```{r, out.width='45%'}
 weather %>%
   ggplot(aes(x = temp_avg, y = COUNT, fill = IS_MEMBER, size = AVG_DURATION)) +
   geom_col(position = "fill") +
@@ -142,14 +166,14 @@ weather %>%
 
 Rain (mm) vs ride count
 
-```{r, out.width='45%', out.aspect=0.3, echo = FALSE}
+```{r, out.width='45%', out.aspect=0.3}
 weather %>%
   filter(rain <= 20) %>%
   ggplot(aes(x = rain, fill = IS_MEMBER, size = AVG_DURATION)) +
   geom_histogram(binwidth = 1) +
   scale_fill_brewer(palette = "Pastel1")
 ```
-```{r, out.width='45%', out.aspect=0.3, echo = FALSE}
+```{r, out.width='45%', out.aspect=0.3}
 weather %>%
   filter(rain <= 20) %>%
   ggplot(aes(x = rain, y = COUNT, fill = IS_MEMBER, size = AVG_DURATION)) +
@@ -167,7 +191,7 @@ Wind (m/s) vs ride count.
 
 Second graph is scaled to 100% to show member vs casual share.
 
-```{r, out.width='35%', echo = FALSE}
+```{r, out.width='35%'}
 weather %>%
   filter(wind_avg <= 10) %>%
   ggplot(aes(x = wind_avg, y = COUNT, fill = IS_MEMBER, size = AVG_DURATION)) +
@@ -175,7 +199,7 @@ weather %>%
   scale_x_binned() +
   scale_fill_brewer(palette = "Pastel1")
 ```
-```{r, out.width='30%', echo = FALSE}
+```{r, out.width='30%'}
 weather %>%
   filter(wind_avg <= 10) %>%
   ggplot(aes(x = wind_avg, y = COUNT, fill = IS_MEMBER, size = AVG_DURATION)) +
