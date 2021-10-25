@@ -3,6 +3,7 @@ knitr::opts_chunk$set(echo = FALSE, warning = TRUE, message = FALSE)
 install.packages("ggplot2", repos = "http://cran.us.r-project.org")
 library(ggplot2)
 library(dplyr)
+theme_set(theme_light())
 ```
 # Cyclistic
 
