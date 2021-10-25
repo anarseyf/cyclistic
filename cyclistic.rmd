@@ -61,13 +61,13 @@ head(plot, n = 2)
 
 plot %>%
   ggplot(aes(x = dayofweek, y = AVG_COUNT, color = IS_MEMBER, size = AVG_DURATION)) +
-  geom_point() +
+  geom_point(alpha = 0.8) +
   facet_wrap(~year_month, ncol = 3)
 ```
 
 #### Overall by weekday
 
-```{r, fig.width = 3, fig.height = 2}
+```{r, fig.width = 4, fig.height = 2}
 plot <- agg_daily_computed_weekdays %>%
   group_by(dayofweek, IS_MEMBER) %>%
   summarize(AVG_COUNT = mean(COUNT), AVG_DURATION = mean(AVG_DURATION))
@@ -76,8 +76,8 @@ head(plot, n = 2)
 
 plot %>%
   ggplot(aes(x = dayofweek, y = AVG_COUNT, color = IS_MEMBER, size = AVG_DURATION)) +
-  geom_point() +
-  theme(legend.position = "none")
+  geom_point(alpha = 0.8)
+# theme(legend.position = "none")
 ```
 
 #### Hourly
@@ -89,8 +89,8 @@ agg_hourly %>%
     y = factor(dayofweek, levels = unique(rev(dayofweek))),
     color = IS_MEMBER, size = COUNT
   )) +
+  # scale_color_brewer(palette = "Pastel1") +
   geom_point(position = position_dodge(width = 0.5), alpha = 0.8)
-# scale_color_brewer(palette = "Pastel1")
 ```
 
 #### Weekly Counts and Average Duration
@@ -105,7 +105,7 @@ agg_daily_computed_weekdays %>%
     y = COUNT,
     fill = IS_MEMBER
   )) +
-  geom_bar(stat = "identity") +
+  geom_bar(stat = "identity", alpha = 0.8) +
   theme(legend.position = "none")
 ```
 
@@ -120,7 +120,7 @@ agg_daily_computed_weekdays %>%
     y = WEEKLY_AVG_DURATION,
     fill = IS_MEMBER
   )) +
-  geom_bar(stat = "identity") +
+  geom_bar(stat = "identity", alpha = 0.8) +
   theme(legend.position = "none")
 ```
 
@@ -146,17 +146,17 @@ In degrees C.
 ```{r, out.width='49%', out.aspect=0.3}
 
 ggplot(data = weather, aes(x = temp_avg, y = COUNT, color = IS_MEMBER, size = AVG_DURATION)) +
-  geom_point()
+  geom_point(alpha = 0.8)
 ```
 ```{r, out.width='49%', out.aspect=0.3}
 ggplot(data = weather, aes(x = temp_avg, fill = IS_MEMBER, size = AVG_DURATION)) +
-  geom_histogram(binwidth = 1)
+  geom_histogram(binwidth = 1, alpha = 0.8)
 ```
 
 ```{r, out.width='45%'}
 weather %>%
   ggplot(aes(x = temp_avg, y = COUNT, fill = IS_MEMBER, size = AVG_DURATION)) +
-  geom_col(position = "fill") +
+  geom_col(position = "fill", alpha = 0.8) +
   scale_x_binned() +
   scale_y_continuous(labels = scales::percent) +
   theme(legend.position = "none")
@@ -171,18 +171,18 @@ Rain (mm) vs ride count
 weather %>%
   filter(rain <= 20) %>%
   ggplot(aes(x = rain, fill = IS_MEMBER, size = AVG_DURATION)) +
-  geom_histogram(binwidth = 1) +
-  scale_fill_brewer(palette = "Pastel1")
+  # scale_fill_brewer(palette = "Pastel1") +
+  geom_histogram(binwidth = 1, alpha = 0.8)
 ```
 ```{r, out.width='45%', out.aspect=0.3}
 weather %>%
   filter(rain <= 20) %>%
   ggplot(aes(x = rain, y = COUNT, fill = IS_MEMBER, size = AVG_DURATION)) +
-  geom_col(position = "fill") +
+  geom_col(position = "fill", alpha = 0.8) +
   scale_x_binned() +
   scale_y_continuous(labels = scales::percent) +
-  theme(legend.position = "none") +
-  scale_fill_brewer(palette = "Pastel1")
+  # scale_fill_brewer(palette = "Pastel1") +
+  theme(legend.position = "none")
 ```
 
 
@@ -196,17 +196,17 @@ Second graph is scaled to 100% to show member vs casual share.
 weather %>%
   filter(wind_avg <= 10) %>%
   ggplot(aes(x = wind_avg, y = COUNT, fill = IS_MEMBER, size = AVG_DURATION)) +
-  geom_col() +
-  scale_x_binned() +
-  scale_fill_brewer(palette = "Pastel1")
+  geom_col(alpha = 0.8) +
+  # scale_fill_brewer(palette = "Pastel1") +
+  scale_x_binned()
 ```
 ```{r, out.width='30%'}
 weather %>%
   filter(wind_avg <= 10) %>%
   ggplot(aes(x = wind_avg, y = COUNT, fill = IS_MEMBER, size = AVG_DURATION)) +
-  geom_col(position = "fill") +
+  geom_col(position = "fill", alpha = 0.8) +
   scale_x_binned() +
-  scale_fill_brewer(palette = "Pastel1") +
+  # scale_fill_brewer(palette = "Pastel1") +
   scale_y_continuous(labels = scales::percent) +
   theme(legend.position = "none")
 ```
