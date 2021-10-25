@@ -16,8 +16,8 @@ library(dplyr)
 #### Duration by weekday
 
 ```{r, echo = FALSE}
-d <- read.csv("avg-duration-by-weekday.csv")
-head(d, n = 3)
+agg_daily_computed_weekdays <- read.csv("agg_daily_computed_weekdays.csv")
+head(agg_daily_computed_weekdays, n = 3)
 ```
 
 #### Aggregate: daily duration and count
@@ -26,6 +26,11 @@ agg_daily <- read.csv("agg_daily_duration_count.csv")
 head(agg_daily, n = 3)
 ```
 
+#### Aggregate: daily duration and count
+```{r, echo = FALSE}
+agg_daily <- read.csv("agg_daily_duration_count.csv")
+head(agg_daily, n = 3)
+```
 
 ## The Graphs
 
@@ -36,15 +41,35 @@ Note: February, non-member: abnormally high duration.
 ```{r, include = FALSE}
 agg_summarized <- agg_daily %>%
   group_by(YEAR_MONTH, DAYOFWEEK, IS_MEMBER) %>%
-  summarise(MEAN_DURATION = mean(AVG_DURATION), MEAN_COUNT = mean(COUNT))
+  summarize(MEAN_DURATION = mean(AVG_DURATION), MEAN_COUNT = mean(COUNT))
+head(agg_daily)
+head(agg_summarized)
 ```
+
+#### Monthly
 
 ```{r, echo = FALSE}
-ggplot(data = agg_summarized, aes(x = DAYOFWEEK, y = MEAN_COUNT, color = IS_MEMBER, size = MEAN_DURATION)) +
+plot <- agg_daily_computed_weekdays %>%
+  group_by(year_month, dayofweek, IS_MEMBER) %>%
+  summarize(AVG_COUNT = mean(COUNT), AVG_DURATION = mean(AVG_DURATION))
+head(plot)
+plot %>%
+  ggplot(aes(x = dayofweek, y = AVG_COUNT, color = IS_MEMBER, size = AVG_DURATION)) +
   geom_point() +
-  facet_wrap(~YEAR_MONTH, ncol = 3)
+  facet_wrap(~year_month, ncol = 3)
 ```
 
+#### Overall
+
+```{r, echo = FALSE}
+plot <- agg_daily_computed_weekdays %>%
+  group_by(dayofweek, IS_MEMBER) %>%
+  summarize(AVG_COUNT = mean(COUNT), AVG_DURATION = mean(AVG_DURATION))
+head(plot)
+plot %>%
+  ggplot(aes(x = dayofweek, y = AVG_COUNT, color = IS_MEMBER, size = AVG_DURATION)) +
+  geom_point()
+```
 
 #### Total Counts and Average Duration
 
