@@ -11,32 +11,10 @@ theme_set(theme_light())
 - October 2021
 - Capstone project | Google Data Analytics course #8 | Coursera
 
-
-## The Data
-
-#### Duration by weekday
-
 ```{r}
 agg_daily_computed_weekdays <- read.csv("agg_daily_computed_weekdays.csv")
-head(agg_daily_computed_weekdays, n = 2)
-```
-
-#### Aggregate: daily duration and count
-```{r}
 agg_daily <- read.csv("agg_daily_duration_count.csv")
-head(agg_daily, n = 2)
-```
-
-#### Aggregate: daily duration and count
-```{r}
-agg_daily <- read.csv("agg_daily_duration_count.csv")
-head(agg_daily, n = 2)
-```
-
-#### Aggregate: hourly by weekday
-```{r}
 agg_hourly <- read.csv("agg_hourly_status.csv")
-head(agg_hourly, n = 2)
 ```
 
 ## The Graphs
@@ -47,7 +25,6 @@ head(agg_hourly, n = 2)
 agg_summarized <- agg_daily %>%
   group_by(YEAR_MONTH, DAYOFWEEK, IS_MEMBER) %>%
   summarize(MEAN_DURATION = mean(AVG_DURATION), MEAN_COUNT = mean(COUNT))
-head(agg_summarized, n = 2)
 ```
 
 #### Monthly by weekday
@@ -56,8 +33,6 @@ head(agg_summarized, n = 2)
 plot <- agg_daily_computed_weekdays %>%
   group_by(year_month, dayofweek, IS_MEMBER) %>%
   summarize(AVG_COUNT = mean(COUNT), AVG_DURATION = mean(AVG_DURATION))
-
-head(plot, n = 2)
 
 plot %>%
   ggplot(aes(x = dayofweek, y = AVG_COUNT, color = IS_MEMBER, size = AVG_DURATION)) +
