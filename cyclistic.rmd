@@ -1,8 +1,14 @@
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE, warning = TRUE, message = FALSE)
+library(dplyr)
 install.packages("ggplot2", repos = "http://cran.us.r-project.org")
 library(ggplot2)
-library(dplyr)
+install.packages("ggmap", repos = "http://cran.us.r-project.org")
+library(ggmap)
+install.packages("maps", repos = "http://cran.us.r-project.org")
+library(maps)
+install.packages("tidyr", repos = "http://cran.us.r-project.org")
+library(tidyr)
 theme_set(theme_light())
 ```
 # Cyclistic
@@ -219,3 +225,58 @@ weather %>%
   scale_y_continuous(labels = scales::percent) +
   theme(legend.position = "none")
 ```
+
+## Maps
+
+### Stations
+
+1288 stations.
+Following: members vs non-members, 9am vs 5pm, Monday-Friday.
+
+```{r}
+stations_diff <- read.csv("stations_diff_8am_noon_4pm.csv")
+```
+
+#### Members vs Non-members
+
+Friday, 4pm
+
+```{r}
+heatmap_friday <- stations_diff %>%
+  filter(dayofweek == 5) %>%
+  filter(hour == 16)
+
+heatmap_friday$diff <-
+  map <- get_map(location = "Chicago", zoom = 12, maptype = "toner")
+
+ggmap(map, darken = 0.3) +
+  # ggplot() +
+  geom_point(data = heatmap_friday, aes(x = lng, y = lat, color = diff)) +
+  scale_color_steps2(low = "#990000", mid = "yellow", high = "#005290", midpoint = 0) +
+  facet_wrap(vars(is_member))
+```
+
+#### Non-members
+```{r, fig.width=10, fig.height=4}
+heatmap_casual <- stations_diff %>%
+  filter(is_member == "false")
+
+ggmap(map, darken = 0.3) +
+  # ggplot() +
+  geom_point(data = heatmap_casual, aes(x = lng, y = lat, color = diff)) +
+  scale_color_steps2(low = "red", mid = "white", high = "#088ff7", midpoint = 0) +
+  facet_grid(hour ~ dayofweek)
+```
+
+#### Members
+```{r, fig.width=10, fig.height=4}
+heatmap_member <- stations_diff %>%
+  filter(is_member == "true")
+
+ggmap(map, darken = 0.3) +
+  # ggplot() +
+  geom_point(data = heatmap_member, aes(x = lng, y = lat, color = diff)) +
+  scale_color_steps2(low = "red", mid = "white", high = "#088ff7", midpoint = 0) +
+  facet_grid(hour ~ dayofweek)
+```
+
