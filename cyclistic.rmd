@@ -1,16 +1,15 @@
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = FALSE, warning = TRUE, message = FALSE)
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
 library(dplyr)
-install.packages("ggplot2", repos = "http://cran.us.r-project.org")
+packages <- c("tidyr", "ggplot2", "ggmap", "maps")
+install.packages(setdiff(packages, rownames(installed.packages())), repos = "http://cran.us.r-project.org")
 library(ggplot2)
-install.packages("ggmap", repos = "http://cran.us.r-project.org")
 library(ggmap)
-install.packages("maps", repos = "http://cran.us.r-project.org")
 library(maps)
-install.packages("tidyr", repos = "http://cran.us.r-project.org")
 library(tidyr)
 theme_set(theme_light())
 ```
+
 # Cyclistic
 
 - Anar Seyf (anar.seyf@gmail.com)
@@ -226,66 +225,64 @@ weather %>%
   theme(legend.position = "none")
 ```
 
-## Maps
+## The Geography
 
-### Stations
+#### Stations
 
-1288 stations.
-Following: members vs non-members, 9am vs 5pm, Monday-Friday.
+**1288** stations. Following: **non-members vs members**, **8am vs 4pm**, **Monday-Friday**.
+
+Each dot is a bike docking station. Stations highlighed **yellow-red** have more arrivals than departures for the given hour, suggesting an influx of bike traffic at that location.
 
 ```{r}
 stations_diff <- read.csv("stations_diff_8am_noon_4pm.csv")
+
+stations_diff <- stations_diff %>% arrange(diff)
+
+index <- stations_diff$diff > 0
+stations_diff$log_diff[index] <- log10(stations_diff$diff[index])
+stations_diff$log_diff[stations_diff$diff <= 0] <- NA
+
+color_scale <- scale_color_steps(low = "#ffff17", high = "#e90505", na.value = "#072d66")
+
+# map11 <- get_map(location = "Chicago", zoom = 11, maptype = "toner")
+map12 <- get_map(location = "Chicago", zoom = 12, maptype = "toner")
+
+alpha <- 0.8
+darken <- 0.4
 ```
 
-#### Members vs Non-members
+#### Friday, 4pm, non-members vs members
 
-Friday, 4pm
-
-```{r}
-heatmap_friday <- stations_diff %>%
+```{r, fig.width = 8, fig.height = 4}
+heatmap_large <- stations_diff %>%
   filter(dayofweek == 5) %>%
-  # filter(diff > 0) %>%
-  filter(is_member == "true")
+  filter(hour == 16)
 
-index <- heatmap_friday$diff > 0
-heatmap_friday$log_diff[index] <- log10(heatmap_friday$diff[index])
-heatmap_friday$log_diff[heatmap_friday$diff <= 0] <- NA
-
-
-glimpse(heatmap_friday$diff)
-glimpse(heatmap_friday$log_diff)
-
-map <- get_map(location = "Chicago", zoom = 12, maptype = "toner")
-
-ggmap(map, darken = 0.3) +
+ggmap(map12, darken = darken) +
   # ggplot() +
-  geom_point(data = heatmap_friday, aes(x = lng, y = lat, color = diff)) +
-  # scale_color_steps2(low = "#990000", mid = "yellow", high = "#005290", midpoint = 0) +
-  scale_color_steps(low = "#ffff17", high = "#e90505", na.value = "#0527e6") +
-  facet_wrap(vars(hour))
+  geom_point(data = heatmap_large, aes(x = lng, y = lat, color = log_diff), alpha = alpha) + color_scale +
+  facet_wrap(~is_member)
 ```
 
-#### Non-members
-```{r, fig.width=10, fig.height=4}
-heatmap_casual <- stations_diff %>%
-  filter(is_member == "false")
-
-ggmap(map, darken = 0.3) +
-  # ggplot() +
-  geom_point(data = heatmap_casual, aes(x = lng, y = lat, color = diff)) +
-  scale_color_steps2(low = "red", mid = "white", high = "#088ff7", midpoint = 0) +
-  facet_grid(hour ~ dayofweek)
-```
-
-#### Members
+#### 8am, Monday-Sunday, casual vs members
 ```{r, fig.width=10, fig.height=4}
 heatmap_member <- stations_diff %>%
-  filter(is_member == "true")
+  filter(hour == 8)
 
-ggmap(map, darken = 0.3) +
+ggmap(map12, darken = darken) +
   # ggplot() +
-  geom_point(data = heatmap_member, aes(x = lng, y = lat, color = diff)) +
-  scale_color_steps2(low = "red", mid = "white", high = "#088ff7", midpoint = 0) +
-  facet_grid(hour ~ dayofweek)
+  geom_point(data = heatmap_member, aes(x = lng, y = lat, color = log_diff), alpha = alpha) + color_scale +
+  facet_grid(is_member ~ dayofweek)
+```
+
+#### 4pm, Monday-Sunday, casual vs members
+```{r, fig.width=10, fig.height=4}
+heatmap_casual <- stations_diff %>%
+  filter(hour == 16)
+
+ggmap(map12, darken = darken) +
+  # ggplot() +
+  geom_point(data = heatmap_casual, aes(x = lng, y = lat, color = log_diff), alpha = alpha) + color_scale +
+  facet_grid(is_member ~ dayofweek)
 ```
 
