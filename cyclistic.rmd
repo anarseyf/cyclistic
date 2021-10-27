@@ -244,16 +244,25 @@ Friday, 4pm
 ```{r}
 heatmap_friday <- stations_diff %>%
   filter(dayofweek == 5) %>%
-  filter(hour == 16)
+  # filter(diff > 0) %>%
+  filter(is_member == "true")
 
-heatmap_friday$diff <-
-  map <- get_map(location = "Chicago", zoom = 12, maptype = "toner")
+index <- heatmap_friday$diff > 0
+heatmap_friday$log_diff[index] <- log10(heatmap_friday$diff[index])
+heatmap_friday$log_diff[heatmap_friday$diff <= 0] <- NA
+
+
+glimpse(heatmap_friday$diff)
+glimpse(heatmap_friday$log_diff)
+
+map <- get_map(location = "Chicago", zoom = 12, maptype = "toner")
 
 ggmap(map, darken = 0.3) +
   # ggplot() +
   geom_point(data = heatmap_friday, aes(x = lng, y = lat, color = diff)) +
-  scale_color_steps2(low = "#990000", mid = "yellow", high = "#005290", midpoint = 0) +
-  facet_wrap(vars(is_member))
+  # scale_color_steps2(low = "#990000", mid = "yellow", high = "#005290", midpoint = 0) +
+  scale_color_steps(low = "#ffff17", high = "#e90505", na.value = "#0527e6") +
+  facet_wrap(vars(hour))
 ```
 
 #### Non-members
