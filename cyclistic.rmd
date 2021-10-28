@@ -1,12 +1,20 @@
+---
+output: pdf_document
+---
+
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
-library(dplyr)
-packages <- c("tidyr", "ggplot2", "ggmap", "maps")
+
+packages <- c("tidyr", "knitr", "ggplot2", "ggmap", "maps", "kableExtra")
 install.packages(setdiff(packages, rownames(installed.packages())), repos = "http://cran.us.r-project.org")
+
 library(ggplot2)
 library(ggmap)
 library(maps)
+library(dplyr)
 library(tidyr)
+library(knitr)
+
 theme_set(theme_light())
 ```
 
@@ -20,13 +28,20 @@ theme_set(theme_light())
 agg_daily_computed_weekdays <- read.csv("agg_daily_computed_weekdays.csv")
 agg_daily <- read.csv("agg_daily_duration_count.csv")
 agg_hourly <- read.csv("agg_hourly_status.csv")
+agg_monthly <- read.csv("agg_monthly_status.csv")
+```
+
+### 1. Members ride more often, casual users ride for longer.
+
+```{r}
+kable(agg_monthly)
 ```
 
 ## The Graphs
 
 #### Aggregate by day of week
 
-```{r}
+```{r, eval=FALSE}
 agg_summarized <- agg_daily %>%
   group_by(YEAR_MONTH, DAYOFWEEK, IS_MEMBER) %>%
   summarize(MEAN_DURATION = mean(AVG_DURATION), MEAN_COUNT = mean(COUNT))
@@ -34,7 +49,7 @@ agg_summarized <- agg_daily %>%
 
 #### Monthly by weekday
 
-```{r}
+```{r, eval=FALSE}
 plot <- agg_daily_computed_weekdays %>%
   group_by(year_month, dayofweek, IS_MEMBER) %>%
   summarize(AVG_COUNT = mean(COUNT), AVG_DURATION = mean(AVG_DURATION))
@@ -62,7 +77,7 @@ plot %>%
 
 #### Hourly
 
-```{r, fig.width=8, fig.height=4}
+```{r, eval=FALSE, fig.width=8, fig.height=4}
 agg_hourly %>%
   ggplot(aes(
     x = hour,
@@ -76,7 +91,7 @@ agg_hourly %>%
 #### Weekly Counts and Average Duration
 
 Full year, weekly.
-```{r, echo=FALSE, fig.width=8, fig.height=2}
+```{r, eval=FALSE, echo=FALSE, fig.width=8, fig.height=2}
 head(agg_daily_computed_weekdays, n = 2)
 
 agg_daily_computed_weekdays %>%
@@ -89,7 +104,7 @@ agg_daily_computed_weekdays %>%
   theme(legend.position = "none")
 ```
 
-```{r, fig.width=8, fig.height=2}
+```{r, eval=FALSE, fig.width=8, fig.height=2}
 # y = factor(weeknum, levels = unique(rev(weeknum)))
 agg_daily_computed_weekdays %>%
   # select(-STDDEV_DURATION, -MIN_DURATION, -MAX_DURATION) %>%
@@ -108,7 +123,7 @@ Note: **not weighted average** for the graph above.
 
 #### Monthly by bike type
 
-```{r}
+```{r, eval=FALSE}
 agg_monthly_type_status <- read.csv("agg_monthly_type_status.csv")
 head(agg_monthly_type_status, n = 2)
 
@@ -124,12 +139,13 @@ agg_monthly_type_status %>%
 
 **TODO** — either use a weather-only dataset or show trips alongside weather.
 
-```{r, fig.width=8, fig.height=2}
+```{r, eval=FALSE, fig.width=8, fig.height=2}
 agg_weekly_weather <- read.csv("agg_weekly_weather.csv")
-head(agg_weekly_weather, n = 3)
+# head(agg_weekly_weather, n = 3)
 
 d <- agg_weekly_weather %>%
   filter(is_member == "true") %>%
+  filter(weekly_rain_total > 0) %>%
   select(-is_member)
 
 p <- ggplot(data = d, aes(x = year_week, y = weekly_temp_avg, group = 1))
@@ -145,7 +161,7 @@ p +
 
 **TODO: Recompute** on new daily aggregates.
 
-```{r}
+```{r, eval=FALSE}
 weather <- read.csv("agg-daily-trips-weather.csv")
 weather %>%
   select(-wind_2min_peak, -temp_min, -temp_max) %>%
@@ -157,17 +173,17 @@ weather %>%
 
 In degrees C.
 
-```{r, out.width='45%', out.aspect=0.3}
+```{r, eval=FALSE, out.width='45%', out.aspect=0.3}
 
 ggplot(data = weather, aes(x = temp_avg, y = COUNT, color = IS_MEMBER, size = AVG_DURATION)) +
   geom_point(alpha = 0.8)
 ```
-```{r, out.width='45%', out.aspect=0.3}
+```{r, eval=FALSE, out.width='45%', out.aspect=0.3}
 ggplot(data = weather, aes(x = temp_avg, fill = IS_MEMBER, size = AVG_DURATION)) +
   geom_histogram(binwidth = 1, alpha = 0.8)
 ```
 
-```{r, out.width='45%'}
+```{r, eval=FALSE, out.width='45%'}
 weather %>%
   ggplot(aes(x = temp_avg, y = COUNT, fill = IS_MEMBER, size = AVG_DURATION)) +
   geom_col(position = "fill", alpha = 0.8) +
@@ -181,14 +197,14 @@ weather %>%
 
 Rain (mm) vs ride count
 
-```{r, out.width='45%', out.aspect=0.3}
+```{r, eval=FALSE, out.width='45%', out.aspect=0.3}
 weather %>%
   filter(rain <= 20) %>%
   ggplot(aes(x = rain, fill = IS_MEMBER, size = AVG_DURATION)) +
   # scale_fill_brewer(palette = "Pastel1") +
   geom_histogram(binwidth = 1, alpha = 0.8)
 ```
-```{r, out.width='45%', out.aspect=0.3}
+```{r, eval=FALSE, out.width='45%', out.aspect=0.3}
 weather %>%
   filter(rain <= 20) %>%
   ggplot(aes(x = rain, y = COUNT, fill = IS_MEMBER, size = AVG_DURATION)) +
@@ -206,7 +222,7 @@ Wind (m/s) vs ride count.
 
 Second graph is scaled to 100% to show member vs casual share.
 
-```{r, out.width='30%'}
+```{r, eval=FALSE, out.width='30%'}
 weather %>%
   filter(wind_avg <= 10) %>%
   ggplot(aes(x = wind_avg, y = COUNT, fill = IS_MEMBER, size = AVG_DURATION)) +
@@ -214,7 +230,7 @@ weather %>%
   # scale_fill_brewer(palette = "Pastel1") +
   scale_x_binned()
 ```
-```{r, out.width='30%'}
+```{r, eval=FALSE, out.width='30%'}
 weather %>%
   filter(wind_avg <= 10) %>%
   ggplot(aes(x = wind_avg, y = COUNT, fill = IS_MEMBER, size = AVG_DURATION)) +
@@ -229,11 +245,11 @@ weather %>%
 
 #### Stations
 
-**1288** stations. Following: **non-members vs members**, **8am vs 4pm**, **Monday-Friday**.
+**1288** stations. Following: **casual vs members**, **8am vs 4pm**, **Monday-Friday**.
 
 Each dot is a bike docking station. Stations highlighed **yellow-red** have more arrivals than departures for the given hour, suggesting an influx of bike traffic at that location.
 
-```{r}
+```{r, eval=FALSE}
 stations_diff <- read.csv("stations_diff_8am_noon_4pm.csv")
 
 stations_diff <- stations_diff %>% arrange(diff)
@@ -247,13 +263,13 @@ color_scale <- scale_color_steps(low = "#ffff17", high = "#e90505", na.value = "
 # map11 <- get_map(location = "Chicago", zoom = 11, maptype = "toner")
 map12 <- get_map(location = "Chicago", zoom = 12, maptype = "toner")
 
-alpha <- 0.8
+alpha <- 0.6
 darken <- 0.4
 ```
 
-#### Friday, 4pm, non-members vs members
+#### Friday, 4pm, casual vs members
 
-```{r, fig.width = 8, fig.height = 4}
+```{r, eval=FALSE, fig.width = 8, fig.height = 4}
 heatmap_large <- stations_diff %>%
   filter(dayofweek == 5) %>%
   filter(hour == 16)
@@ -265,7 +281,7 @@ ggmap(map12, darken = darken) +
 ```
 
 #### 8am, Monday-Sunday, casual vs members
-```{r, fig.width=10, fig.height=4}
+```{r, eval=FALSE, fig.width=10, fig.height=4}
 heatmap_member <- stations_diff %>%
   filter(hour == 8)
 
@@ -276,7 +292,7 @@ ggmap(map12, darken = darken) +
 ```
 
 #### 4pm, Monday-Sunday, casual vs members
-```{r, fig.width=10, fig.height=4}
+```{r, eval=FALSE, fig.width=10, fig.height=4}
 heatmap_casual <- stations_diff %>%
   filter(hour == 16)
 

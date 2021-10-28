@@ -1,0 +1,3 @@
+is_member,p_temp_avg,p_rain,p_snow,p_wind_avg
+false,0.81,0.0,-0.2,-0.2
+true,0.91,-0.01,-0.29,-0.22
