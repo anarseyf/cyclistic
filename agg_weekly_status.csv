@@ -1,0 +1,15 @@
+dayofweek,status,avg_duration,avg_count
+1,Casual,28,5047
+1,Member,13,7107
+2,Casual,25,4763
+2,Member,13,7701
+3,Casual,24,4871
+3,Member,13,8002
+4,Casual,24,5104
+4,Member,13,7807
+5,Casual,26,6421
+5,Member,13,7666
+6,Casual,30,9923
+6,Member,15,7550
+7,Casual,32,8429
+7,Member,16,6513
