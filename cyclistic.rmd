@@ -1,11 +1,11 @@
 ---
-output: pdf_document
+output: html_document
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
 
-packages <- c("tidyr", "knitr", "ggplot2", "ggmap", "maps", "kableExtra")
+packages <- c("tidyr", "knitr", "ggplot2", "ggmap", "maps", "kableExtra", "tibble")
 install.packages(setdiff(packages, rownames(installed.packages())), repos = "http://cran.us.r-project.org")
 
 library(ggplot2)
@@ -14,6 +14,7 @@ library(maps)
 library(dplyr)
 library(tidyr)
 library(knitr)
+library(tibble)
 
 theme_set(theme_light())
 ```
@@ -33,9 +34,39 @@ agg_monthly <- read.csv("agg_monthly_status.csv")
 
 ### 1. Members ride more often, casual users ride for longer.
 
+
+#### Average ride duration (minutes)
+
 ```{r}
-kable(agg_monthly)
+
+wide <- agg_monthly %>%
+  select(status, month_start, duration) %>%
+  spread(month_start, duration)
+
+month_starts <- colnames(wide)[2:13]
+colnames(wide) <- c("Status", months(as.Date(month_starts), abbreviate = TRUE))
+
+wide[, -1] <- round(wide[, -1])
+
+wide %>% kable(format.args = list(big.mark = ","))
 ```
+
+#### Average daily rides (count)
+
+```{r}
+
+wide <- agg_monthly %>%
+  select(status, month_start, avg_count) %>%
+  spread(month_start, avg_count)
+
+month_starts <- colnames(wide)[2:13]
+colnames(wide) <- c("Status", months(as.Date(month_starts), abbreviate = TRUE))
+
+wide[, -1] <- round(wide[, -1])
+
+wide %>% kable(format.args = list(big.mark = ","))
+```
+
 
 ## The Graphs
 
