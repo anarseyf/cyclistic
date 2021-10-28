@@ -32,6 +32,14 @@ agg_hourly <- read.csv("agg_hourly_status.csv")
 agg_monthly <- read.csv("agg_monthly_status.csv")
 ```
 
+## Data
+
+Basic stats, etc.
+
+
+## Analysis
+
+
 ### 1. Members ride more often, casual users ride for longer.
 
 
@@ -68,6 +76,53 @@ wide %>% kable(format.args = list(big.mark = ","))
 ```
 
 
+### 2. Members ride all week, casual riders prefer weekends.
+
+Members' usage remains nearly flat, falling on Sunday. Casual users do most riding starting on Friday and through the weekend, peaking on Saturday.
+
+#### Overall by weekday
+
+```{r, fig.width=4, fig.height=2}
+plot <- agg_daily_computed_weekdays %>%
+  group_by(dayofweek, IS_MEMBER) %>%
+  summarize(AVG_COUNT = mean(COUNT), AVG_DURATION = mean(AVG_DURATION))
+
+head(plot, n = 2)
+
+plot %>%
+  ggplot(aes(x = dayofweek, y = AVG_COUNT, color = IS_MEMBER, size = AVG_DURATION)) +
+  geom_point(alpha = 0.8)
+# theme(legend.position = "none")
+```
+
+
+#### Hourly
+
+```{r, fig.width=8, fig.height=4}
+agg_hourly %>%
+  ggplot(aes(
+    x = hour,
+    y = factor(dayofweek, levels = unique(rev(dayofweek))),
+    color = IS_MEMBER, size = COUNT
+  )) +
+  # scale_color_brewer(palette = "Pastel1") +
+  geom_point(position = position_dodge(width = 0.5), alpha = 0.8)
+```
+
+```{r, fig.width=8, fig.height = 3}
+agg_hourly %>%
+  mutate(log_count = log(COUNT)) %>%
+  ggplot(aes(
+    x = dayofweek,
+    y = factor(hour, levels = unique(rev(hour))),
+    fill = log_count
+  )) +
+  geom_tile(color = "grey", position = position_dodge(width = 0.1)) +
+  scale_fill_viridis_c(option = "plasma") +
+  #  scale_fill_steps2(low = "white", mid = "yellow", high = "red", midpoint = 3) +
+  facet_wrap(~IS_MEMBER)
+```
+
 ## The Graphs
 
 #### Aggregate by day of week
@@ -91,33 +146,6 @@ plot %>%
   facet_wrap(~year_month, ncol = 3)
 ```
 
-#### Overall by weekday
-
-```{r, fig.width=4, fig.height=2}
-plot <- agg_daily_computed_weekdays %>%
-  group_by(dayofweek, IS_MEMBER) %>%
-  summarize(AVG_COUNT = mean(COUNT), AVG_DURATION = mean(AVG_DURATION))
-
-head(plot, n = 2)
-
-plot %>%
-  ggplot(aes(x = dayofweek, y = AVG_COUNT, color = IS_MEMBER, size = AVG_DURATION)) +
-  geom_point(alpha = 0.8)
-# theme(legend.position = "none")
-```
-
-#### Hourly
-
-```{r, eval=FALSE, fig.width=8, fig.height=4}
-agg_hourly %>%
-  ggplot(aes(
-    x = hour,
-    y = factor(dayofweek, levels = unique(rev(dayofweek))),
-    color = IS_MEMBER, size = COUNT
-  )) +
-  # scale_color_brewer(palette = "Pastel1") +
-  geom_point(position = position_dodge(width = 0.5), alpha = 0.8)
-```
 
 #### Weekly Counts and Average Duration
 
