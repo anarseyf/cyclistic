@@ -165,17 +165,7 @@ wide %>%
 
 #### Hourly
 
-```{r, fig.width=4, fig.height=4, eval=FALSE}
-agg_hourly %>%
-  ggplot(aes(
-    x = hour,
-    y = factor(dayofweek, levels = unique(rev(dayofweek))),
-    color = IS_MEMBER, size = COUNT
-  )) +
-  # scale_color_brewer(palette = "Pastel1") +
-  geom_point(position = position_dodge(width = 0.5), alpha = 0.8) +
-  theme(legend.position = "none")
-```
+Members: weekday pattern closely matching standard working hours (especially the peak around 4-5pm). Weekend pattern much closer between the two groups, with volume peaking on Saturday afternoon.
 
 ```{r, fig.width=8, fig.height = 3}
 agg_hourly %>%
@@ -189,14 +179,17 @@ agg_hourly %>%
   scale_fill_viridis_c(option = "plasma") +
   #  scale_fill_steps2(low = "white", mid = "yellow", high = "red", midpoint = 3) +
   facet_wrap(~IS_MEMBER) +
-  labs(caption = "Ride volume heatmap (by day of week vs time of day)")
+  labs(caption = "Ride count heatmap (time of day on vertical axis)")
 ```
 
-**TODO** — duration by weekday.
 
 ### 3. Seasonal and Weather
 
 **TODO** — eliminate 0 rain/snow circles.
+
+#### Ride counts and Weather
+
+Average daily ride count and Chicago weather, Oct'20—Sep'21, by week. Background color is average air temperature that week.
 
 ```{r, fig.width=10, fig.height=3}
 # head(agg_weekly_weather, n = 3)
@@ -213,7 +206,8 @@ agg_weekly_weather %>%
   # geom_bar(aes(y = avg_count, fill = is_member), stat = "identity") +
   geom_step(aes(y = avg_count, group = is_member, color = is_member, size = 0.5), stat = "identity") +
   geom_point(aes(y = 0, size = total_snow / 10), color = "#e30f84", alpha = 0.7) +
-  geom_point(aes(y = 0, size = total_rain), color = "#2192d3", alpha = 0.7)
+  geom_point(aes(y = 0, size = total_rain), color = "#2192d3", alpha = 0.7) +
+  labs(caption = "Weather Oct 2020-Sep 2021. Background = avg temp, etc.")
 # facet_wrap(~is_member, ncol = 1)
 ```
 
@@ -235,7 +229,7 @@ The relationship with **Snow** is clearer, and snow itself is obviously not inde
 
 #### Temperature
 
-```{r, eval=TRUE, fig.height=3}
+```{r, fig.height=3}
 
 ggplot(data = agg_daily_trips_weather, aes(x = temp_avg, y = COUNT, color = IS_MEMBER)) +
   geom_point(alpha = 0.8) +
@@ -247,7 +241,7 @@ ggplot(data = agg_daily_trips_weather, aes(x = temp_avg, y = COUNT, color = IS_M
 ```{r, eval=TRUE, fig.height=3}
 agg_daily_trips_weather %>%
   filter(AVG_DURATION < 100) %>%
-  ggplot(data = , aes(x = temp_avg, y = AVG_DURATION, color = IS_MEMBER)) +
+  ggplot(aes(x = temp_avg, y = AVG_DURATION, color = IS_MEMBER)) +
   geom_point(alpha = 0.8) +
   geom_smooth(method = "lm") +
   facet_wrap(~IS_MEMBER) +
@@ -278,6 +272,12 @@ These distributions confirm the basic observation from section 1: average ride d
 
 ### 4. Geographical
 
+(TODO)
+
+Stations: 1288 distinct stations (saved in table). 85% of trips (4293771 out of 5051830) have both start and end station ID — we focus on those when mapping. These are split almost evenly between M (54.7%) and C.
+
+Stations: 4007812 trips end at a different station from start; 285959 trips start and end at the same station.
+
 ### Stations
 
 **TODO** — # of rides with start & end station (85%).
@@ -295,15 +295,15 @@ stations_diff$log_diff[stations_diff$diff <= 0] <- NA
 
 color_scale <- scale_color_steps(low = "#ffff17", high = "#e90505", na.value = "#072d66")
 
-# map11 <- get_map(location = "Chicago", zoom = 11, maptype = "toner")
 map12 <- get_map(location = "Chicago", zoom = 12, maptype = "toner")
+map13 <- get_map(location = "Chicago", zoom = 13, maptype = "toner")
 
 alpha <- 0.6
 darken <- 0.4
 ```
 
 
-#### Friday, 4pm, casual vs members
+#### Friday afternoon (4-5pm)
 
 ```{r, eval=FALSE, fig.width = 8, fig.height = 4}
 heatmap_large <- stations_diff %>%
@@ -317,37 +317,44 @@ ggmap(map12, darken = darken) +
 ```
 
 
-#### 8am, Monday-Sunday, casual vs members
+Let's look at the same pattern across the entire week.
 
-```{r, eval=FALSE, fig.width=10, fig.height=4}
+
+#### Morning (8-9am)
+
+```{r, eval=FALSE}
 heatmap_member <- stations_diff %>%
   filter(hour == 8)
 
-ggmap(map12, darken = darken) +
+ggmap(map13, darken = darken) +
   # ggplot() +
   geom_point(data = heatmap_member, aes(x = lng, y = lat, color = log_diff), alpha = alpha) + color_scale +
   facet_grid(is_member ~ dayofweek)
 ```
 
+A distinct weekday pattern. Apart from volume, the "fingerprints" look similar for the two groups. On weekends it looks different: there isn't a lot of casual riding into this area in the morning.
 
-#### 4pm, Monday-Sunday, casual vs members
+
+#### Afternoon (4-5pm)
 
 ```{r, eval=FALSE, fig.width=10, fig.height=4}
 heatmap_casual <- stations_diff %>%
   filter(hour == 16)
 
-ggmap(map12, darken = darken) +
+ggmap(map13, darken = darken) +
   # ggplot() +
   geom_point(data = heatmap_casual, aes(x = lng, y = lat, color = log_diff), alpha = alpha) + color_scale +
   facet_grid(is_member ~ dayofweek)
 ```
+
+More dispersion away from center (TODO).
 
 ---
 
 ## Conclusions
 
 * Commuting, daily tasks?
-* Similarities M vs C?
+* Similarities M vs C? Modes (work hours vs weekend)
 * Lower variance for M than C. More consistent patterns.
 
 ---
