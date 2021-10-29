@@ -5,7 +5,17 @@ output: html_document
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
 
-packages <- c("tidyr", "knitr", "ggplot2", "ggmap", "maps", "tibble", "ggnewscale")
+kable_custom <- function(data, ...) {
+  knitr::kable(data,
+    vline = "",
+    format.args = list(big.mark = ","),
+    ...
+  ) %>%
+    kable_styling(position = "left")
+}
+
+
+packages <- c("tidyr", "knitr", "ggplot2", "ggmap", "maps", "tibble", "ggnewscale", "kableExtra", "tinytex")
 install.packages(setdiff(packages, rownames(installed.packages())), repos = "http://cran.us.r-project.org")
 
 library(ggplot2)
@@ -16,6 +26,7 @@ library(tidyr)
 library(knitr)
 library(tibble)
 library(ggnewscale)
+library(kableExtra)
 
 theme_set(theme_light())
 ```
@@ -60,8 +71,6 @@ Basic stats, etc.
 
 Overall stats TODO. Mini charts TODO. February outliers. Summer months #C > #M.
 
-#### Average ride duration (minutes)
-
 ```{r}
 
 wide <- agg_monthly %>%
@@ -74,11 +83,10 @@ colnames(wide) <- c("Status", months(as.Date(month_starts), abbreviate = TRUE))
 wide[, -1] <- round(wide[, -1])
 
 wide %>%
-  kable(format.args = list(big.mark = ","))
-# kable_styling(full_width = FALSE)
+  kable_custom(
+    caption = "Average ride duration (minutes)"
+  )
 ```
-
-#### Average daily rides (count)
 
 ```{r}
 
@@ -92,7 +100,9 @@ colnames(wide) <- c("Status", months(as.Date(month_starts), abbreviate = TRUE))
 wide[, -1] <- round(wide[, -1])
 
 wide %>%
-  kable(format.args = list(big.mark = ","))
+  kable_custom(
+    caption = "Average daily rides (count)"
+  )
 ```
 
 
@@ -103,9 +113,6 @@ Members' usage remains nearly flat, falling on Sunday. Casual users do most ridi
 
 ### By weekday
 
-
-#### Average daily duration (minutes)
-
 ```{r, fig.align='left'}
 wide <- agg_weekly_status %>%
   select(-avg_count) %>%
@@ -113,10 +120,8 @@ wide <- agg_weekly_status %>%
 
 colnames(wide) <- c("Status", weekday_names_short)
 
-wide %>% kable()
+wide %>% kable_custom(caption = "Average daily duration (minutes)")
 ```
-
-#### Average daily rides (count)
 
 ```{r}
 
@@ -127,7 +132,7 @@ wide <- agg_weekly_status %>%
 colnames(wide) <- c("Status", weekday_names_short)
 
 wide %>%
-  kable(format.args = list(big.mark = ","))
+  kable_custom(caption = "Average daily rides (count)")
 ```
 
 
@@ -182,10 +187,8 @@ agg_weekly_weather %>%
 # facet_wrap(~is_member, ncol = 1)
 ```
 
-### Correlation between weather and ride volume
-
 ```{r}
-weather_correlations %>% kable()
+weather_correlations %>% kable_custom(caption = "Correlation: weather and ride count")
 ```
 
 ```{r}
