@@ -76,9 +76,9 @@ The **main data source** of the report is a 12-month window (October 2020 to Sep
 * start and end latitude/longitude;
 * status (member or casual)
 
-The **secondary data source** is the Chicago daily weather dataset from NOAA **(link TODO)** for the same time period.
+The **secondary data source** is the Chicago daily weather dataset from NOAA **(link TODO)** for the same time period. This seems highly pertinent background given the nature of the main data.
 
-The 5 million individual records are condensed into hourly, daily, weekly, and monthly **aggregates**, grouped by status (member vs casual).
+The 5 million individual records are condensed into hourly, daily, weekly, and monthly **aggregates**, grouped by status (member vs casual). For example, the daily aggregates table consists of 730 entries (365 for Members and Casual users each) with columns for ride count and average duration.
 
 Throughout the report, more emphasis is given to *ride count*, as the main indicator of activity volume, than to ride *ride duration*.
 
@@ -89,7 +89,7 @@ Throughout the report, more emphasis is given to *ride count*, as the main indic
 
 ### 1. Members ride more often, casual users ride for longer.
 
-An average ride is about **28 minutes** long for casual users, **14 minutes** long for members. Members make an average of **7,479** rides per day, casual users **6362** rides per day. (The number of distinct riders is unavailable in the data, so we can only refer to the overall population.)
+An average ride is about **28 minutes** long for casual users, **14 minutes** long for members. Members make an average of **7,479** rides per day, casual users **6,362** rides per day. (The number of distinct riders is unavailable in the data, so we can only refer to the overall population. **TODO** — so "total volume" instead of "more often"?)
 
 Ride volume is lowest in February and highest in July-August. Casual ride volume exceeds that of Members in the summer months only.
 
@@ -130,6 +130,8 @@ wide %>%
     caption = "Average daily rides (count)"
   )
 ```
+
+**TODO** — kable sparklines?
 
 
 ### 2. Members ride all week, casual riders prefer weekends.
@@ -217,8 +219,44 @@ agg_weekly_weather %>%
 
 ```{r}
 weather_correlations %>%
-  kable_custom(caption = "Correlation: weather and ride count")
+  kable_custom(caption = "Correlation (r): weather and ride count")
 ```
+
+The Pearson correlation factor, or **r**, (**TODO link**) is a normalized measure of how strongly two parameters are related. It ranges from -1 (perfect negative correlation) to 1 (perfect positive correlation), with 0 indicating no correlation.
+
+At a high level, the coefficients point in the direction we'd expect. For example, ride count is negatively correlated with snow: the more snow, the fewer rides.
+
+Ride count is strongly correlated with **air temperature** for both groups. This is clear enough from Fig.X(TODO).
+
+**Rain** is more ambiguous. **r** is close to 0. Does this mean bike riders in Chicago are not influenced by rain at all? It is more ambiguous than that. In the 12-month period 256 days have no recorded rain, only 16 days with 1/2 inch or more daily total, and no days with 2 inches. On days with at least 1/2 inch of rain, Members rode 4% less total time, and Casual users rode 6% more. It simply did not rain enough to make this relationship clear; we are at the limits of this data.
+
+The relationship with **Snow** is clearer, and snow itself is obviously not independent from temperature.
+
+
+#### Temperature
+
+```{r, eval=TRUE, fig.height=3}
+
+ggplot(data = agg_daily_trips_weather, aes(x = temp_avg, y = COUNT, color = IS_MEMBER)) +
+  geom_point(alpha = 0.8) +
+  geom_smooth(method = "lm") +
+  facet_wrap(~IS_MEMBER) +
+  labs(title = "Correlation: temp vs ride count")
+```
+
+```{r, eval=TRUE, fig.height=3}
+agg_daily_trips_weather %>%
+  filter(AVG_DURATION < 100) %>%
+  ggplot(data = , aes(x = temp_avg, y = AVG_DURATION, color = IS_MEMBER)) +
+  geom_point(alpha = 0.8) +
+  geom_smooth(method = "lm") +
+  facet_wrap(~IS_MEMBER) +
+  labs(title = "Correlation: temp vs ride duration", caption = "Each dot represents one day")
+```
+
+These distributions confirm the basic observation from section 1: average ride duration remains nearly the same (more so for Members), but the ride volume is highly influenced by environment.
+
+(Note: one outlier for Casual riders, 16 Feb 2021, was removed from this plot as it had an average duration of over 100 minutes. More on this in the appendix.)
 
 ```{r}
 # d <- agg_weekly_weather %>%
@@ -242,12 +280,13 @@ weather_correlations %>%
 
 ### Stations
 
+**TODO** — # of rides with start & end station (85%).
 **1288** stations. Following: **casual vs members**, **8am vs 4pm**, **Monday-Friday**.
 
 Each dot is a bike docking station. Stations highlighed **yellow-red** have more arrivals than departures for the given hour, suggesting an influx of bike traffic at that location.
 
 
-```{r, eval=TRUE}
+```{r, eval=FALSE}
 stations_diff <- stations_diff %>% arrange(diff)
 
 index <- stations_diff$diff > 0
@@ -266,7 +305,7 @@ darken <- 0.4
 
 #### Friday, 4pm, casual vs members
 
-```{r, eval=TRUE, fig.width = 8, fig.height = 4}
+```{r, eval=FALSE, fig.width = 8, fig.height = 4}
 heatmap_large <- stations_diff %>%
   filter(dayofweek == 5) %>%
   filter(hour == 16)
@@ -280,7 +319,7 @@ ggmap(map12, darken = darken) +
 
 #### 8am, Monday-Sunday, casual vs members
 
-```{r, eval=TRUE, fig.width=10, fig.height=4}
+```{r, eval=FALSE, fig.width=10, fig.height=4}
 heatmap_member <- stations_diff %>%
   filter(hour == 8)
 
@@ -293,7 +332,7 @@ ggmap(map12, darken = darken) +
 
 #### 4pm, Monday-Sunday, casual vs members
 
-```{r, eval=TRUE, fig.width=10, fig.height=4}
+```{r, eval=FALSE, fig.width=10, fig.height=4}
 heatmap_casual <- stations_diff %>%
   filter(hour == 16)
 
@@ -303,6 +342,27 @@ ggmap(map12, darken = darken) +
   facet_grid(is_member ~ dayofweek)
 ```
 
+---
+
+## Conclusions
+
+* Commuting, daily tasks?
+* Similarities M vs C?
+* Lower variance for M than C. More consistent patterns.
+
+---
+
+## Recommendations
+
+How to convert casual riders into members?
+
+Recommendations:
+
+* Suggest bikes as a mode of work commute
+* Check against areas underserved by public transport, consider expanding service in those areas
+* Make riding easier in colder months?
+* Weather-protected bikes?
+
 
 ---
 
@@ -310,11 +370,29 @@ ggmap(map12, darken = darken) +
 
 ### A. Data cleanup
 
+February: 16-Feb-2021 had a few rides of close to 24 hours. 
+Overall, most long rides (12+ hours) are attributed to Casual riders, which likely corresponds to 24-hour rentals. Not enough info to interpret this further.
+
+Presentation: log scale.
+Out of scope: 
+
+* bike types; 
+* other factors (natural disasters, sporting events, etc.); 
+* pricing; 
+* individual user profiles
+* trends (year-over-year, electric, geography, etc.)
+
 ### B. Links
 
 Data sources (incl. Google Maps, Stamen).
 
-### C. Full data (weekly?)
+### C. Tools used (and not used)
+
+### D. Full data (weekly?)
+
+---
+
+## Unused graphs
 
 #### Monthly by weekday
 
@@ -330,35 +408,6 @@ plot %>%
 ```
 
 
-#### Weekly Counts and Average Duration
-
-Full year, weekly.
-```{r, eval=FALSE, echo=FALSE, fig.width=8, fig.height=2}
-agg_daily_computed_weekdays %>%
-  ggplot(aes(
-    x = factor(weeknum, levels = unique(weeknum)),
-    y = COUNT,
-    fill = IS_MEMBER
-  )) +
-  geom_bar(stat = "identity", alpha = 0.8) +
-  theme(legend.position = "none")
-```
-
-```{r, eval=FALSE, fig.width=8, fig.height=2}
-# y = factor(weeknum, levels = unique(rev(weeknum)))
-agg_daily_computed_weekdays %>%
-  # select(-STDDEV_DURATION, -MIN_DURATION, -MAX_DURATION) %>%
-  group_by(weeknum, IS_MEMBER) %>%
-  summarize(WEEKLY_AVG_DURATION = mean(AVG_DURATION)) %>%
-  ggplot(aes(
-    x = factor(weeknum, levels = unique(weeknum)),
-    y = WEEKLY_AVG_DURATION,
-    fill = IS_MEMBER
-  )) +
-  geom_bar(stat = "identity", alpha = 0.8) +
-  theme(legend.position = "none")
-```
-
 #### Monthly by bike type
 
 ```{r, eval=FALSE}
@@ -369,66 +418,28 @@ agg_monthly_type_status %>%
   facet_wrap(~year_month, ncol = 3)
 ```
 
-#### Temperature
+```{r, eval=FALSE, fig.height=3}
 
-```{r, eval=FALSE, out.width='45%', out.aspect=0.3}
+# TODO - remove
 
-ggplot(data = agg_daily_trips_weather, aes(x = temp_avg, y = COUNT, color = IS_MEMBER, size = AVG_DURATION)) +
-  geom_point(alpha = 0.8)
+agg_daily_trips_weather %>%
+  # filter(rain > 0) %>%
+  ggplot(aes(x = rain, y = COUNT, color = IS_MEMBER)) +
+  geom_point(alpha = 0.8) +
+  geom_smooth(method = "lm") +
+  facet_wrap(~IS_MEMBER) +
+  labs(title = "Correlation: rain vs ride count")
 ```
-```{r, eval=FALSE, out.width='45%', out.aspect=0.3}
-ggplot(data = agg_daily_trips_weather, aes(x = temp_avg, fill = IS_MEMBER, size = AVG_DURATION)) +
-  geom_histogram(binwidth = 1, alpha = 0.8)
-```
 
-```{r, eval=FALSE, out.width='45%'}
+
+```{r, eval=FALSE}
+
+# TODO - remove
+
 agg_daily_trips_weather %>%
   ggplot(aes(x = temp_avg, y = COUNT, fill = IS_MEMBER, size = AVG_DURATION)) +
   geom_col(position = "fill", alpha = 0.8) +
   scale_x_binned() +
-  scale_y_continuous(labels = scales::percent) +
-  theme(legend.position = "none")
-```
-
-
-#### Rain
-
-```{r, eval=FALSE, out.width='45%', out.aspect=0.3}
-agg_daily_trips_weather %>%
-  filter(rain <= 20) %>%
-  ggplot(aes(x = rain, fill = IS_MEMBER, size = AVG_DURATION)) +
-  # scale_fill_brewer(palette = "Pastel1") +
-  geom_histogram(binwidth = 1, alpha = 0.8)
-```
-```{r, eval=FALSE, out.width='45%', out.aspect=0.3}
-agg_daily_trips_weather %>%
-  filter(rain <= 20) %>%
-  ggplot(aes(x = rain, y = COUNT, fill = IS_MEMBER, size = AVG_DURATION)) +
-  geom_col(position = "fill", alpha = 0.8) +
-  scale_x_binned() +
-  scale_y_continuous(labels = scales::percent) +
-  # scale_fill_brewer(palette = "Pastel1") +
-  theme(legend.position = "none")
-```
-
-
-#### Wind
-
-```{r, eval=FALSE, out.width='30%'}
-agg_daily_trips_weather %>%
-  filter(wind_avg <= 10) %>%
-  ggplot(aes(x = wind_avg, y = COUNT, fill = IS_MEMBER, size = AVG_DURATION)) +
-  geom_col(alpha = 0.8) +
-  # scale_fill_brewer(palette = "Pastel1") +
-  scale_x_binned()
-```
-```{r, eval=FALSE, out.width='30%'}
-agg_daily_trips_weather %>%
-  filter(wind_avg <= 10) %>%
-  ggplot(aes(x = wind_avg, y = COUNT, fill = IS_MEMBER, size = AVG_DURATION)) +
-  geom_col(position = "fill", alpha = 0.8) +
-  scale_x_binned() +
-  # scale_fill_brewer(palette = "Pastel1") +
   scale_y_continuous(labels = scales::percent) +
   theme(legend.position = "none")
 ```
