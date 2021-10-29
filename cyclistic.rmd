@@ -20,12 +20,6 @@ library(ggnewscale)
 theme_set(theme_light())
 ```
 
-# Cyclistic
-
-- Anar Seyf (anar.seyf@gmail.com)
-- October 2021
-- Capstone project | Google Data Analytics course #8 | Coursera
-
 ```{r}
 agg_daily_computed_weekdays <- read.csv("agg_daily_computed_weekdays.csv")
 agg_daily <- read.csv("agg_daily_duration_count.csv")
@@ -34,6 +28,8 @@ agg_monthly <- read.csv("agg_monthly_status.csv")
 agg_weekly_status <- read.csv("agg_weekly_status.csv")
 agg_monthly_type_status <- read.csv("agg_monthly_type_status.csv")
 stations_diff <- read.csv("stations_diff_8am_noon_4pm.csv")
+stations_diff <- read.csv("stations_diff_8am_noon_4pm.csv")
+weather_correlations <- read.csv("weather_correlations.csv")
 
 agg_daily_trips_weather <- read.csv("agg_daily_trips_weather.csv")
 agg_daily_trips_weather$day <- as.Date(agg_daily_trips_weather$day)
@@ -44,6 +40,13 @@ agg_weekly_weather$week_start <- as.Date(agg_weekly_weather$week_start)
 weekday_names_full <- c("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday")
 weekday_names_short <- c("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
 ```
+
+# Cyclistic
+
+- Anar Seyf (anar.seyf@gmail.com)
+- October 2021
+- Capstone project | Google Data Analytics course #8 | Coursera
+
 
 ## Data
 
@@ -160,7 +163,7 @@ agg_hourly %>%
 
 **TODO** — eliminate 0 rain/snow circles.
 
-```{r, fig.width=10, fig.height=4}
+```{r, fig.width=10, fig.height=3}
 # head(agg_weekly_weather, n = 3)
 
 # data_casual = agg_daily_trips_weather %>% filter(IS_MEMBER == "false")
@@ -169,13 +172,20 @@ agg_hourly %>%
 
 agg_weekly_weather %>%
   ggplot(aes(x = week_start)) +
-  geom_bar(aes(y = Inf, fill = avg_temp), stat = "identity", alpha = 0.5, position = "dodge") +
+  geom_bar(aes(y = Inf, fill = avg_temp), stat = "identity", alpha = 0.3, position = "dodge") +
   scale_fill_viridis_c() +
   new_scale_fill() +
-  geom_bar(aes(y = avg_count, fill = is_member), stat = "identity") +
+  # geom_bar(aes(y = avg_count, fill = is_member), stat = "identity") +
+  geom_step(aes(y = avg_count, group = is_member, color = is_member, size = 0.5), stat = "identity") +
   geom_point(aes(y = 0, size = total_snow / 10), color = "#e30f84", alpha = 0.7) +
-  geom_point(aes(y = 0, size = total_rain), color = "#2192d3", alpha = 0.7) +
-  facet_wrap(~is_member, ncol = 1)
+  geom_point(aes(y = 0, size = total_rain), color = "#2192d3", alpha = 0.7)
+# facet_wrap(~is_member, ncol = 1)
+```
+
+### Correlation between weather and ride volume
+
+```{r}
+weather_correlations %>% kable()
 ```
 
 ```{r}
