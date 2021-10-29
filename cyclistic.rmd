@@ -5,16 +5,6 @@ output: html_document
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
 
-kable_custom <- function(data, ...) {
-  knitr::kable(data,
-    vline = "",
-    format.args = list(big.mark = ","),
-    ...
-  ) %>%
-    kable_styling(position = "left")
-}
-
-
 packages <- c("tidyr", "knitr", "ggplot2", "ggmap", "maps", "tibble", "ggnewscale", "kableExtra", "tinytex")
 install.packages(setdiff(packages, rownames(installed.packages())), repos = "http://cran.us.r-project.org")
 
@@ -27,6 +17,15 @@ library(knitr)
 library(tibble)
 library(ggnewscale)
 library(kableExtra)
+
+kable_custom <- function(data, ...) {
+  knitr::kable(data,
+    vline = "",
+    format.args = list(big.mark = ","),
+    ...
+  ) %>%
+    kable_styling(position = "left", latex_options = c("hold_position"))
+}
 
 theme_set(theme_light())
 ```
@@ -58,18 +57,45 @@ weekday_names_short <- c("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
 - October 2021
 - Capstone project | Google Data Analytics course #8 | Coursera
 
+---
+
+## Goal
+
+The objective of the report is to show differences between **Members** (those who purchased an annual membership) and **Casual** riders (those who pay for single rides or daily passes). Every part of the analysis shows (**TODO - synonym**) those categories side-by-side.
+
+---
 
 ## Data
 
-Basic stats, etc.
+The **main data source** of the report is a 12-month window (October 2020 to September 2021, inclusive) from the dataset provided by Divvy **(link TODO)**. (See data cleaning notes in the Appendix.) The data consists of over 5 million unique ride records with these columns:
 
+* unique ride ID;
+* bicycle type (classic, docked, electric);
+* ride start and end time;
+* start and end docking station (ID and name);
+* start and end latitude/longitude;
+* status (member or casual)
+
+The **secondary data source** is the Chicago daily weather dataset from NOAA **(link TODO)** for the same time period.
+
+The 5 million individual records are condensed into hourly, daily, weekly, and monthly **aggregates**, grouped by status (member vs casual).
+
+Throughout the report, more emphasis is given to *ride count*, as the main indicator of activity volume, than to ride *ride duration*.
+
+---
 
 ## Analysis
 
 
 ### 1. Members ride more often, casual users ride for longer.
 
-Overall stats TODO. Mini charts TODO. February outliers. Summer months #C > #M.
+An average ride is about **28 minutes** long for casual users, **14 minutes** long for members. Members make an average of **7,479** rides per day, casual users **6362** rides per day. (The number of distinct riders is unavailable in the data, so we can only refer to the overall population.)
+
+Ride volume is lowest in February and highest in July-August. Casual ride volume exceeds that of Members in the summer months only.
+
+Ride duration is nearly flat for Members throughout the year; for Casual riders it increases by a few minutes in the summer months.
+
+(The month of February shows an abnormal peak in ride duration. It may be partially attributable to low ride volume and thus higher variance in the data, but is otherwise not readily explained here.)
 
 ```{r}
 
@@ -110,8 +136,7 @@ wide %>%
 
 Members' usage remains nearly flat, falling on Sunday. Casual users do most riding starting on Friday and through the weekend, peaking on Saturday.
 
-
-### By weekday
+#### By weekday
 
 ```{r, fig.align='left'}
 wide <- agg_weekly_status %>%
@@ -161,8 +186,11 @@ agg_hourly %>%
   geom_tile(color = "grey", position = position_dodge(width = 0.1)) +
   scale_fill_viridis_c(option = "plasma") +
   #  scale_fill_steps2(low = "white", mid = "yellow", high = "red", midpoint = 3) +
-  facet_wrap(~IS_MEMBER)
+  facet_wrap(~IS_MEMBER) +
+  labs(caption = "Ride volume heatmap (by day of week vs time of day)")
 ```
+
+**TODO** — duration by weekday.
 
 ### 3. Seasonal and Weather
 
@@ -188,7 +216,8 @@ agg_weekly_weather %>%
 ```
 
 ```{r}
-weather_correlations %>% kable_custom(caption = "Correlation: weather and ride count")
+weather_correlations %>%
+  kable_custom(caption = "Correlation: weather and ride count")
 ```
 
 ```{r}
@@ -208,7 +237,84 @@ weather_correlations %>% kable_custom(caption = "Correlation: weather and ride c
 #   geom_point(aes(y = 0, size = weekly_rain_total, color = weekly_rain_total, alpha = 0.8))
 ```
 
-### ---------------------------------------
+
+### 4. Geographical
+
+### Stations
+
+**1288** stations. Following: **casual vs members**, **8am vs 4pm**, **Monday-Friday**.
+
+Each dot is a bike docking station. Stations highlighed **yellow-red** have more arrivals than departures for the given hour, suggesting an influx of bike traffic at that location.
+
+
+```{r, eval=TRUE}
+stations_diff <- stations_diff %>% arrange(diff)
+
+index <- stations_diff$diff > 0
+stations_diff$log_diff[index] <- log10(stations_diff$diff[index])
+stations_diff$log_diff[stations_diff$diff <= 0] <- NA
+
+color_scale <- scale_color_steps(low = "#ffff17", high = "#e90505", na.value = "#072d66")
+
+# map11 <- get_map(location = "Chicago", zoom = 11, maptype = "toner")
+map12 <- get_map(location = "Chicago", zoom = 12, maptype = "toner")
+
+alpha <- 0.6
+darken <- 0.4
+```
+
+
+#### Friday, 4pm, casual vs members
+
+```{r, eval=TRUE, fig.width = 8, fig.height = 4}
+heatmap_large <- stations_diff %>%
+  filter(dayofweek == 5) %>%
+  filter(hour == 16)
+
+ggmap(map12, darken = darken) +
+  # ggplot() +
+  geom_point(data = heatmap_large, aes(x = lng, y = lat, color = log_diff), alpha = alpha) + color_scale +
+  facet_wrap(~is_member)
+```
+
+
+#### 8am, Monday-Sunday, casual vs members
+
+```{r, eval=TRUE, fig.width=10, fig.height=4}
+heatmap_member <- stations_diff %>%
+  filter(hour == 8)
+
+ggmap(map12, darken = darken) +
+  # ggplot() +
+  geom_point(data = heatmap_member, aes(x = lng, y = lat, color = log_diff), alpha = alpha) + color_scale +
+  facet_grid(is_member ~ dayofweek)
+```
+
+
+#### 4pm, Monday-Sunday, casual vs members
+
+```{r, eval=TRUE, fig.width=10, fig.height=4}
+heatmap_casual <- stations_diff %>%
+  filter(hour == 16)
+
+ggmap(map12, darken = darken) +
+  # ggplot() +
+  geom_point(data = heatmap_casual, aes(x = lng, y = lat, color = log_diff), alpha = alpha) + color_scale +
+  facet_grid(is_member ~ dayofweek)
+```
+
+
+---
+
+## Appendix
+
+### A. Data cleanup
+
+### B. Links
+
+Data sources (incl. Google Maps, Stamen).
+
+### C. Full data (weekly?)
 
 #### Monthly by weekday
 
@@ -253,8 +359,6 @@ agg_daily_computed_weekdays %>%
   theme(legend.position = "none")
 ```
 
-Note: **not weighted average** for the graph above.
-
 #### Monthly by bike type
 
 ```{r, eval=FALSE}
@@ -265,12 +369,7 @@ agg_monthly_type_status %>%
   facet_wrap(~year_month, ncol = 3)
 ```
 
-## The Weather
-
-
 #### Temperature
-
-In degrees C.
 
 ```{r, eval=FALSE, out.width='45%', out.aspect=0.3}
 
@@ -294,8 +393,6 @@ agg_daily_trips_weather %>%
 
 #### Rain
 
-Rain (mm) vs ride count
-
 ```{r, eval=FALSE, out.width='45%', out.aspect=0.3}
 agg_daily_trips_weather %>%
   filter(rain <= 20) %>%
@@ -317,10 +414,6 @@ agg_daily_trips_weather %>%
 
 #### Wind
 
-Wind (m/s) vs ride count.
-
-Second graph is scaled to 100% to show member vs casual share.
-
 ```{r, eval=FALSE, out.width='30%'}
 agg_daily_trips_weather %>%
   filter(wind_avg <= 10) %>%
@@ -339,63 +432,3 @@ agg_daily_trips_weather %>%
   scale_y_continuous(labels = scales::percent) +
   theme(legend.position = "none")
 ```
-
-## The Geography
-
-#### Stations
-
-**1288** stations. Following: **casual vs members**, **8am vs 4pm**, **Monday-Friday**.
-
-Each dot is a bike docking station. Stations highlighed **yellow-red** have more arrivals than departures for the given hour, suggesting an influx of bike traffic at that location.
-
-```{r, eval=FALSE}
-stations_diff <- stations_diff %>% arrange(diff)
-
-index <- stations_diff$diff > 0
-stations_diff$log_diff[index] <- log10(stations_diff$diff[index])
-stations_diff$log_diff[stations_diff$diff <= 0] <- NA
-
-color_scale <- scale_color_steps(low = "#ffff17", high = "#e90505", na.value = "#072d66")
-
-# map11 <- get_map(location = "Chicago", zoom = 11, maptype = "toner")
-map12 <- get_map(location = "Chicago", zoom = 12, maptype = "toner")
-
-alpha <- 0.6
-darken <- 0.4
-```
-
-#### Friday, 4pm, casual vs members
-
-```{r, eval=FALSE, fig.width = 8, fig.height = 4}
-heatmap_large <- stations_diff %>%
-  filter(dayofweek == 5) %>%
-  filter(hour == 16)
-
-ggmap(map12, darken = darken) +
-  # ggplot() +
-  geom_point(data = heatmap_large, aes(x = lng, y = lat, color = log_diff), alpha = alpha) + color_scale +
-  facet_wrap(~is_member)
-```
-
-#### 8am, Monday-Sunday, casual vs members
-```{r, eval=FALSE, fig.width=10, fig.height=4}
-heatmap_member <- stations_diff %>%
-  filter(hour == 8)
-
-ggmap(map12, darken = darken) +
-  # ggplot() +
-  geom_point(data = heatmap_member, aes(x = lng, y = lat, color = log_diff), alpha = alpha) + color_scale +
-  facet_grid(is_member ~ dayofweek)
-```
-
-#### 4pm, Monday-Sunday, casual vs members
-```{r, eval=FALSE, fig.width=10, fig.height=4}
-heatmap_casual <- stations_diff %>%
-  filter(hour == 16)
-
-ggmap(map12, darken = darken) +
-  # ggplot() +
-  geom_point(data = heatmap_casual, aes(x = lng, y = lat, color = log_diff), alpha = alpha) + color_scale +
-  facet_grid(is_member ~ dayofweek)
-```
-
