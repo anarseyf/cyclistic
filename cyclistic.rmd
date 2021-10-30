@@ -24,6 +24,7 @@ library(ggnewscale)
 library(kableExtra)
 library(gridExtra)
 library(grid)
+library(scales)
 ```
 
 ```{r, echo=FALSE}
@@ -86,88 +87,7 @@ weekday_names_short <- c("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
 
 ---
 
-## Analysis
 
-
-### 1. Members ride more often, casual users ride for longer.
-
-An average ride is about **28 minutes** long for casual users, **14 minutes** long for members. Members make an average of **7,479** rides per day, casual users **6,362** rides per day. (The number of distinct riders is unavailable in the data, so we can only refer to the overall population. **TODO** — so "total volume" instead of "more often"?)
-
-Ride volume is lowest in February and highest in July-August. Casual ride volume exceeds that of Members in the summer months only.
-
-Ride duration is nearly flat for Members throughout the year; for Casual riders it increases by a few minutes in the summer months.
-
-(The month of February shows an abnormal peak in ride duration. It may be partially attributable to low ride volume and thus higher variance in the data, but is otherwise not readily explained here.)
-
-```{r}
-
-wide <- agg_monthly %>%
-  select(status, month_start, duration) %>%
-  spread(month_start, duration)
-
-month_starts <- colnames(wide)[2:13]
-colnames(wide) <- c(" ", months(as.Date(month_starts), abbreviate = TRUE))
-
-wide[, -1] <- round(wide[, -1])
-
-wide %>%
-  kable_custom(caption = "Average ride duration (minutes)")
-```
-
-```{r}
-
-wide <- agg_monthly %>%
-  select(status, month_start, avg_count) %>%
-  spread(month_start, avg_count)
-
-month_starts <- colnames(wide)[2:13]
-colnames(wide) <- c("Status", months(as.Date(month_starts), abbreviate = TRUE))
-
-wide[, -1] <- round(wide[, -1])
-
-wide %>%
-  mutate(across(Oct:Sep, bold_larger_fn)) %>%
-  kable_custom(
-    escape = FALSE,
-    caption = "Average daily rides (count)"
-  )
-```
-
-**TODO** — kable sparklines?
-
-
-### 2. Members ride all week, casual riders prefer weekends.
-
-Members' usage remains nearly flat, falling on Sunday. Casual users do most riding starting on Friday and through the weekend, peaking on Saturday.
-
-#### By weekday
-
-```{r, fig.align='left'}
-
-wide <- agg_weekly_status %>%
-  select(-avg_count) %>%
-  spread(dayofweek, avg_duration)
-
-colnames(wide) <- c(" ", weekday_names_short)
-
-wide %>% kable_custom(caption = "Average daily duration (minutes)")
-```
-
-```{r}
-
-wide <- agg_weekly_status %>%
-  select(-avg_duration) %>%
-  spread(dayofweek, avg_count)
-
-colnames(wide) <- c(" ", weekday_names_short)
-
-wide %>%
-  mutate(across(Mon:Sun, bold_larger_fn)) %>%
-  kable_custom(
-    escape = FALSE,
-    caption = "Average daily rides (count)"
-  )
-```
 
 
 #### Hourly
@@ -176,14 +96,18 @@ Members: weekday pattern closely matching standard working hours (especially the
 
 ```{r, fig.width=8, fig.height = 3}
 agg_hourly %>%
-  mutate(log_count = log(COUNT)) %>%
   ggplot(aes(
     x = dayofweek,
     y = factor(hour, levels = unique(rev(hour))),
-    fill = log_count
+    fill = COUNT
   )) +
   geom_tile(color = "grey", position = position_dodge(width = 0.1)) +
-  scale_fill_viridis_c(option = "plasma") +
+  # scale_fill_viridis_c(option = "plasma") +
+  # scale_fill_gradientn(colors = heat.colors(20)) +
+  scale_fill_gradient(
+    low = "#600000", high = "yellow",
+    trans = pseudo_log_trans()
+  ) +
   facet_wrap(~IS_MEMBER) +
   labs(caption = "Ride count heatmap (time of day on vertical axis)")
 ```
@@ -320,6 +244,9 @@ TODO: Heatmap: instead of each weekday, take a month out of each quarter?
 stations_diff <- stations_diff %>% arrange(diff)
 
 index <- stations_diff$diff > 0
+
+# TODO — try log_trans scale instead?
+
 stations_diff$log_diff[index] <- log10(stations_diff$diff[index])
 stations_diff$log_diff[stations_diff$diff <= 0] <- NA
 
@@ -512,3 +439,87 @@ The available dataset is limited. It does not, for example, contain any membersh
 ### Out of scope
 
 -TODO
+
+
+## Analysis
+
+
+### 1. Members ride more often, casual users ride for longer.
+
+An average ride is about **28 minutes** long for casual users, **14 minutes** long for members. Members make an average of **7,479** rides per day, casual users **6,362** rides per day. (The number of distinct riders is unavailable in the data, so we can only refer to the overall population. **TODO** — so "total volume" instead of "more often"?)
+
+Ride volume is lowest in February and highest in July-August. Casual ride volume exceeds that of Members in the summer months only.
+
+Ride duration is nearly flat for Members throughout the year; for Casual riders it increases by a few minutes in the summer months.
+
+(The month of February shows an abnormal peak in ride duration. It may be partially attributable to low ride volume and thus higher variance in the data, but is otherwise not readily explained here.)
+
+```{r}
+
+wide <- agg_monthly %>%
+  select(status, month_start, duration) %>%
+  spread(month_start, duration)
+
+month_starts <- colnames(wide)[2:13]
+colnames(wide) <- c(" ", months(as.Date(month_starts), abbreviate = TRUE))
+
+wide[, -1] <- round(wide[, -1])
+
+wide %>%
+  kable_custom(caption = "Average ride duration (minutes)")
+```
+
+```{r}
+
+wide <- agg_monthly %>%
+  select(status, month_start, avg_count) %>%
+  spread(month_start, avg_count)
+
+month_starts <- colnames(wide)[2:13]
+colnames(wide) <- c("Status", months(as.Date(month_starts), abbreviate = TRUE))
+
+wide[, -1] <- round(wide[, -1])
+
+wide %>%
+  mutate(across(Oct:Sep, bold_larger_fn)) %>%
+  kable_custom(
+    escape = FALSE,
+    caption = "Average daily rides (count)"
+  )
+```
+
+**TODO** — kable sparklines?
+
+
+### 2. Members ride all week, casual riders prefer weekends.
+
+Members' usage remains nearly flat, falling on Sunday. Casual users do most riding starting on Friday and through the weekend, peaking on Saturday.
+
+#### By weekday
+
+```{r, fig.align='left'}
+
+wide <- agg_weekly_status %>%
+  select(-avg_count) %>%
+  spread(dayofweek, avg_duration)
+
+colnames(wide) <- c(" ", weekday_names_short)
+
+wide %>% kable_custom(caption = "Average daily duration (minutes)")
+```
+
+```{r}
+
+wide <- agg_weekly_status %>%
+  select(-avg_duration) %>%
+  spread(dayofweek, avg_count)
+
+colnames(wide) <- c(" ", weekday_names_short)
+
+wide %>%
+  mutate(across(Mon:Sun, bold_larger_fn)) %>%
+  kable_custom(
+    escape = FALSE,
+    caption = "Average daily rides (count)"
+  )
+```
