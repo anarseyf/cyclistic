@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.23 (TeX Live 2022/dev) (preloaded format=pdflatex 2021.10.25)  30 OCT 2021 13:54
+This is pdfTeX, Version 3.141592653-2.6-1.40.23 (TeX Live 2022/dev) (preloaded format=pdflatex 2021.10.25)  30 OCT 2021 15:42
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -574,7 +574,7 @@ LaTeX Font Info:    Trying to load font information for U+msb on input line 90.
 (/Users/wy6cat/Library/TinyTeX/texmf-dist/tex/latex/amsfonts/umsb.fd
 File: umsb.fd 2013/01/14 v3.01 AMS symbols B
 )
-Overfull \hbox (15.43921pt too wide) in paragraph at lines 142--150
+Overfull \hbox (21.10535pt too wide) in paragraph at lines 142--150
  [][] 
  []
 
@@ -671,7 +671,7 @@ t/Library/TinyTeX/texmf-dist/fonts/type1/public/lm/lmbx10.pfb></Users/wy6cat/Li
 brary/TinyTeX/texmf-dist/fonts/type1/public/lm/lmbx12.pfb></Users/wy6cat/Librar
 y/TinyTeX/texmf-dist/fonts/type1/public/lm/lmr10.pfb></Users/wy6cat/Library/Tin
 yTeX/texmf-dist/fonts/type1/public/lm/lmri10.pfb>
-Output written on cyclistic.pdf (6 pages, 321088 bytes).
+Output written on cyclistic.pdf (6 pages, 321288 bytes).
 PDF statistics:
  232 PDF objects out of 1000 (max. 8388607)
  204 compressed objects within 3 object streams

@@ -33,13 +33,17 @@ kable_custom <- function(data, ...) {
     data,
     booktabs = TRUE,
     format.args = list(big.mark = ","),
+    align = c("l", rep("r", ncol(data) - 1)),
     ...
   ) %>%
-    # row_spec(0, bold = TRUE) %>%
     kable_styling(
       # position = "left",
       latex_options = c("hold_position")
     )
+}
+
+bold_larger_fn <- function(x) {
+  cell_spec(x, bold = ifelse(x == max(x), TRUE, FALSE))
 }
 
 theme_set(theme_light())
@@ -102,13 +106,12 @@ wide <- agg_monthly %>%
   spread(month_start, duration)
 
 month_starts <- colnames(wide)[2:13]
-colnames(wide) <- c("Status", months(as.Date(month_starts), abbreviate = TRUE))
+colnames(wide) <- c(" ", months(as.Date(month_starts), abbreviate = TRUE))
 
 wide[, -1] <- round(wide[, -1])
 
 wide %>%
   kable_custom(caption = "Average ride duration (minutes)")
-
 ```
 
 ```{r}
@@ -123,7 +126,9 @@ colnames(wide) <- c("Status", months(as.Date(month_starts), abbreviate = TRUE))
 wide[, -1] <- round(wide[, -1])
 
 wide %>%
+  mutate(across(Oct:Sep, bold_larger_fn)) %>%
   kable_custom(
+    escape = FALSE,
     caption = "Average daily rides (count)"
   )
 ```
@@ -138,11 +143,12 @@ Members' usage remains nearly flat, falling on Sunday. Casual users do most ridi
 #### By weekday
 
 ```{r, fig.align='left'}
+
 wide <- agg_weekly_status %>%
   select(-avg_count) %>%
   spread(dayofweek, avg_duration)
 
-colnames(wide) <- c("Status", weekday_names_short)
+colnames(wide) <- c(" ", weekday_names_short)
 
 wide %>% kable_custom(caption = "Average daily duration (minutes)")
 ```
@@ -153,10 +159,14 @@ wide <- agg_weekly_status %>%
   select(-avg_duration) %>%
   spread(dayofweek, avg_count)
 
-colnames(wide) <- c("Status", weekday_names_short)
+colnames(wide) <- c(" ", weekday_names_short)
 
 wide %>%
-  kable_custom(caption = "Average daily rides (count)")
+  mutate(across(Mon:Sun, bold_larger_fn)) %>%
+  kable_custom(
+    escape = FALSE,
+    caption = "Average daily rides (count)"
+  )
 ```
 
 
