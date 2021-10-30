@@ -95,6 +95,12 @@ weekday_names_short <- c("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
 Members: weekday pattern closely matching standard working hours (especially the peak around 4-5pm). Weekend pattern much closer between the two groups, with volume peaking on Saturday afternoon.
 
 ```{r, fig.width=8, fig.height = 3}
+weekday_ticks <- function() {
+  function(x) {
+    weekday_names_short
+  }
+}
+
 agg_hourly %>%
   ggplot(aes(
     x = dayofweek,
@@ -103,11 +109,12 @@ agg_hourly %>%
   )) +
   geom_tile(color = "grey", position = position_dodge(width = 0.1)) +
   # scale_fill_viridis_c(option = "plasma") +
-  # scale_fill_gradientn(colors = heat.colors(20)) +
-  scale_fill_gradient(
-    low = "#600000", high = "yellow",
-    trans = pseudo_log_trans()
-  ) +
+  scale_fill_gradientn(colors = heat.colors(20), trans = pseudo_log_trans()) +
+  # scale_fill_gradient(
+  #   low = "black", high = "yellow",
+  #   trans = pseudo_log_trans()
+  # ) +
+  scale_x_continuous(labels = weekday_ticks(), breaks = 1:7) +
   facet_wrap(~IS_MEMBER) +
   labs(caption = "Ride count heatmap (time of day on vertical axis)")
 ```
