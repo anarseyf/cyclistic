@@ -2,12 +2,12 @@
 output: pdf_document
 ---
 
-```{r setup, include=FALSE}
+```{r packages, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
 
 packages <- c(
   "tidyr", "knitr", "ggplot2", "ggmap", "gridExtra",
-  "maps", "tibble", "ggnewscale", "kableExtra", "tinytex"
+  "maps", "tibble", "ggnewscale", "kableExtra", "tinytex", "extrafont", "fontcm"
 )
 install.packages(setdiff(packages, rownames(installed.packages())),
   repos = "http://cran.us.r-project.org"
@@ -25,9 +25,30 @@ library(kableExtra)
 library(gridExtra)
 library(grid)
 library(scales)
+library(extrafont)
+library(fontcm)
+
+font_install("fontcm")
+loadfonts()
 ```
 
-```{r, echo=FALSE}
+```{r theme}
+
+# TODO — theme_tufte? lol
+
+theme_set(theme_light(
+  base_family = "CM Roman",
+))
+theme_update(
+  axis.title = element_blank(),
+  legend.position = "none",
+  strip.background = element_rect(fill = "white"),
+  strip.text = element_text(color = "black", size = 10),
+  axis.text = element_text(size = 10, family = "CM Sans"),
+)
+```
+
+```{r functions, echo=FALSE}
 
 kable_custom <- function(data, ...) {
   kbl(
@@ -47,15 +68,36 @@ bold_larger_fn <- function(x) {
   cell_spec(x, bold = ifelse(x == max(x), TRUE, FALSE))
 }
 
-theme_set(theme_light())
-theme_update(
-  axis.title.x = element_blank(),
-  axis.title.y = element_blank(),
-  legend.position = "none"
-)
+weekday_ticks <- function() {
+  function(x) {
+    weekday_names_short
+  }
+}
+
+hour_ticks <- function() {
+  function(x) {
+    lapply(x, to_readable_hour)
+  }
+}
+
+to_readable_hour <- function(h) {
+  n <- as.numeric(h)
+  if (n == 0) {
+    return("midnight")
+  }
+  if (n == 12) {
+    return("noon")
+  }
+
+  am_pm <- ifelse(n < 12, "am", "pm")
+  if (n > 12) {
+    n <- n - 12
+  }
+  return(paste(c(n, am_pm), collapse = ""))
+}
 ```
 
-```{r}
+```{r csv imports}
 agg_daily_computed_weekdays <- read.csv("agg_daily_computed_weekdays.csv")
 agg_daily <- read.csv("agg_daily_duration_count.csv")
 agg_hourly <- read.csv("agg_hourly_status.csv")
@@ -95,10 +137,9 @@ weekday_names_short <- c("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
 Members: weekday pattern closely matching standard working hours (especially the peak around 4-5pm). Weekend pattern much closer between the two groups, with volume peaking on Saturday afternoon.
 
 ```{r, fig.width=8, fig.height = 3}
-weekday_ticks <- function() {
-  function(x) {
-    weekday_names_short
-  }
+
+member_labeller <- function(v) {
+  ifelse(v == "true", "Member", "Casual")
 }
 
 agg_hourly %>%
@@ -115,7 +156,8 @@ agg_hourly %>%
   #   trans = pseudo_log_trans()
   # ) +
   scale_x_continuous(labels = weekday_ticks(), breaks = 1:7) +
-  facet_wrap(~IS_MEMBER) +
+  scale_y_discrete(labels = hour_ticks(), breaks = seq(0, 23, 4)) +
+  facet_wrap(~IS_MEMBER, labeller = labeller(IS_MEMBER = member_labeller)) +
   labs(caption = "Ride count heatmap (time of day on vertical axis)")
 ```
 

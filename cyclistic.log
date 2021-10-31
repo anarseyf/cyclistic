@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.23 (TeX Live 2022/dev) (preloaded format=pdflatex 2021.10.25)  30 OCT 2021 16:18
+This is pdfTeX, Version 3.141592653-2.6-1.40.23 (TeX Live 2022/dev) (preloaded format=pdflatex 2021.10.25)  30 OCT 2021 17:27
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -574,24 +574,24 @@ LaTeX Font Info:    Trying to load font information for U+msb on input line 90.
 (/Users/wy6cat/Library/TinyTeX/texmf-dist/tex/latex/amsfonts/umsb.fd
 File: umsb.fd 2013/01/14 v3.01 AMS symbols B
 )
-<cyclistic_files/figure-latex/unnamed-chunk-3-1.pdf, id=81, 578.16pt x 216.81pt
+<cyclistic_files/figure-latex/unnamed-chunk-1-1.pdf, id=81, 578.16pt x 216.81pt
 >
-File: cyclistic_files/figure-latex/unnamed-chunk-3-1.pdf Graphic file (type pdf
+File: cyclistic_files/figure-latex/unnamed-chunk-1-1.pdf Graphic file (type pdf
 )
-<use cyclistic_files/figure-latex/unnamed-chunk-3-1.pdf>
-Package pdftex.def Info: cyclistic_files/figure-latex/unnamed-chunk-3-1.pdf  us
+<use cyclistic_files/figure-latex/unnamed-chunk-1-1.pdf>
+Package pdftex.def Info: cyclistic_files/figure-latex/unnamed-chunk-1-1.pdf  us
 ed on input line 107.
 (pdftex.def)             Requested size: 469.75385pt x 176.15768pt.
 
 Package hyperref Warning: Difference (2) between bookmark levels is greater 
 (hyperref)                than one, level fixed on input line 110.
 
-<cyclistic_files/figure-latex/unnamed-chunk-4-1.pdf, id=82, 722.7pt x 216.81pt>
+<cyclistic_files/figure-latex/unnamed-chunk-2-1.pdf, id=82, 722.7pt x 216.81pt>
 
-File: cyclistic_files/figure-latex/unnamed-chunk-4-1.pdf Graphic file (type pdf
+File: cyclistic_files/figure-latex/unnamed-chunk-2-1.pdf Graphic file (type pdf
 )
-<use cyclistic_files/figure-latex/unnamed-chunk-4-1.pdf>
-Package pdftex.def Info: cyclistic_files/figure-latex/unnamed-chunk-4-1.pdf  us
+<use cyclistic_files/figure-latex/unnamed-chunk-2-1.pdf>
+Package pdftex.def Info: cyclistic_files/figure-latex/unnamed-chunk-2-1.pdf  us
 ed on input line 120.
 (pdftex.def)             Requested size: 469.76045pt x 140.92813pt.
 
@@ -600,22 +600,22 @@ LaTeX Warning: `!h' float specifier changed to `!ht'.
 [1
 
 {/Users/wy6cat/Library/TinyTeX/texmf-var/fonts/map/pdftex/updmap/pdftex.map} <.
-/cyclistic_files/figure-latex/unnamed-chunk-3-1.pdf> <./cyclistic_files/figure-
-latex/unnamed-chunk-4-1.pdf>]
-<cyclistic_files/figure-latex/unnamed-chunk-6-1.pdf, id=113, 469.755pt x 144.54
+/cyclistic_files/figure-latex/unnamed-chunk-1-1.pdf> <./cyclistic_files/figure-
+latex/unnamed-chunk-2-1.pdf>]
+<cyclistic_files/figure-latex/unnamed-chunk-4-1.pdf, id=119, 469.755pt x 144.54
 pt>
-File: cyclistic_files/figure-latex/unnamed-chunk-6-1.pdf Graphic file (type pdf
+File: cyclistic_files/figure-latex/unnamed-chunk-4-1.pdf Graphic file (type pdf
 )
-<use cyclistic_files/figure-latex/unnamed-chunk-6-1.pdf>
-Package pdftex.def Info: cyclistic_files/figure-latex/unnamed-chunk-6-1.pdf  us
+<use cyclistic_files/figure-latex/unnamed-chunk-4-1.pdf>
+Package pdftex.def Info: cyclistic_files/figure-latex/unnamed-chunk-4-1.pdf  us
 ed on input line 148.
 (pdftex.def)             Requested size: 469.75386pt x 144.53963pt.
-<cyclistic_files/figure-latex/unnamed-chunk-7-1.pdf, id=114, 469.755pt x 144.54
+<cyclistic_files/figure-latex/unnamed-chunk-5-1.pdf, id=120, 469.755pt x 144.54
 pt>
-File: cyclistic_files/figure-latex/unnamed-chunk-7-1.pdf Graphic file (type pdf
+File: cyclistic_files/figure-latex/unnamed-chunk-5-1.pdf Graphic file (type pdf
 )
-<use cyclistic_files/figure-latex/unnamed-chunk-7-1.pdf>
-Package pdftex.def Info: cyclistic_files/figure-latex/unnamed-chunk-7-1.pdf  us
+<use cyclistic_files/figure-latex/unnamed-chunk-5-1.pdf>
+Package pdftex.def Info: cyclistic_files/figure-latex/unnamed-chunk-5-1.pdf  us
 ed on input line 150.
 (pdftex.def)             Requested size: 469.75386pt x 144.53963pt.
 [2pdfTeX warning (ext4): destination with the same identifier (name{table.1}) h
@@ -624,8 +624,8 @@ as been already used, duplicate ignored
                                                   \__shipout_drop_firstpage_...
 l.182 S
        tations: 4007812 trips end at a different station from start; 285959 <./
-cyclistic_files/figure-latex/unnamed-chunk-6-1.pdf> <./cyclistic_files/figure-l
-atex/unnamed-chunk-7-1.pdf>] [3] [4] [5]
+cyclistic_files/figure-latex/unnamed-chunk-4-1.pdf> <./cyclistic_files/figure-l
+atex/unnamed-chunk-5-1.pdf>] [3] [4] [5]
 Overfull \hbox (21.10535pt too wide) in paragraph at lines 485--493
  [][] 
  []
@@ -671,10 +671,10 @@ t/Library/TinyTeX/texmf-dist/fonts/type1/public/lm/lmbx10.pfb></Users/wy6cat/Li
 brary/TinyTeX/texmf-dist/fonts/type1/public/lm/lmbx12.pfb></Users/wy6cat/Librar
 y/TinyTeX/texmf-dist/fonts/type1/public/lm/lmr10.pfb></Users/wy6cat/Library/Tin
 yTeX/texmf-dist/fonts/type1/public/lm/lmri10.pfb>
-Output written on cyclistic.pdf (7 pages, 321281 bytes).
+Output written on cyclistic.pdf (7 pages, 321616 bytes).
 PDF statistics:
- 238 PDF objects out of 1000 (max. 8388607)
- 209 compressed objects within 3 object streams
+ 250 PDF objects out of 1000 (max. 8388607)
+ 221 compressed objects within 3 object streams
  70 named destinations out of 1000 (max. 500000)
  173 words of extra memory for PDF output out of 10000 (max. 10000000)
 
