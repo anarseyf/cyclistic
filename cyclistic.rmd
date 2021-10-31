@@ -145,7 +145,7 @@ weekday_names_short <- c("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
 - Anar Seyf | anar.seyf@gmail.com
 - Capstone project | Google Data Analytics course #8 | Coursera
 - October 2021
-- Source code: github.com/anarseyf/cyclistic
+- Source code: [github.com/anarseyf/cyclistic](github.com/anarseyf/cyclistic)
 
 ---
 
@@ -194,6 +194,10 @@ wide %>%
     full_width = TRUE,
     escape = FALSE,
     caption = "Average daily number of rides"
+  ) %>%
+  footnote(
+    # general_title = "Note: ",
+    general = "In this table and Table 3, the larger of the two numbers for each month is in italics."
   )
 ```
 
@@ -214,7 +218,7 @@ wide %>%
   kable_custom(caption = "Average ride duration (minutes)")
 ```
 
-(February has an abnormal spike in ride duration. It may be partly attributable to low ride volume and thus higher variance in the data, but is otherwise not readily explainable with available data. It seems likely to be weather-related as well—perhaps due to difficulties of reaching a docking station in snow; see section 3 for more details.)
+(February has an abnormal spike in ride duration. It may be partly attributable to low ride volume and thus higher variance in the data, but is otherwise not readily explainable here. It is likely to be weather-related—perhaps due to difficulties of reaching a docking station; see section 3 for more details.)
 
 ### 2. Members ride all week, casual riders prefer weekends.
 
@@ -248,11 +252,11 @@ colnames(wide) <- c(" ", weekday_names_short)
 wide %>% kable_custom(caption = "Average ride duration (minutes)")
 ```
 
-### Hourly heatmap
+#### Hourly heatmap
 
-Members' weekday pattern closely matches standard working hours (note especially the peak around 4-5pm). Weekend pattern much closer between the two groups, with volume peaking on Saturday afternoon.
+This heatmap is a more detailed view of the data from _Table 3_. The Monday–Friday pattern for Members closely matches standard working hours; note especially the peak around 4–5pm. Weekend patterns are much closer between the two groups, apart from volume; note, for example, Saturday evening activity spilling over into early morning on Sunday.
 
-```{r, fig.width=8, fig.height=3, eval=TRUE}
+```{r, fig.width=8, fig.height=3, eval=FALSE}
 
 agg_hourly %>%
   ggplot(aes(
@@ -273,13 +277,13 @@ agg_hourly %>%
   labs(caption = "Ride count heatmap (time of day on vertical axis)")
 ```
 
-### 3. Ride counts and Weather
+### 3. Seasons affect ride volume, but average duration remains stable
 
-Chicago daily weather dataset from NOAA [**[1]**](#links) for the same time period.
+This section uses the Chicago daily weather dataset from NOAA; see [**[Links]**](#links) for data source.
 
-Average daily ride count and Chicago weather, Oct'20—Sep'21, by week. Background color is average air temperature that week.
+The following chart plots one year of ride data, aggregated by week, against weather for that week: average daily air temperature, cumulative rain, and cumulative snow.
 
-```{r, fig.width=10, fig.height=3, eval=FALSE}
+```{r, fig.width=10, fig.height=3, eval=TRUE}
 
 month_labels <- function(x) {
   months(x, abbreviate = TRUE)
@@ -337,20 +341,19 @@ df %>%
   labs(caption = "Weather Oct 2020-Sep 2021. Background = avg temp, etc.")
 ```
 
-```{r, eval=FALSE}
+```{r, eval=TRUE}
+text <- "The Pearson correlation coefficient measures how strongly two sets of data are linearly correlated, from -1 (perfect negative) to 1 (perfect positive), with 0 indicating no correlation. Here, ride count is negatively correlated with snow: the more snow, the fewer rides."
+
 weather_correlations %>%
-  kable_custom(caption = "Correlation (r): weather and ride count")
+  kable_custom(caption = "Correlation (r) between weather and number of rides") %>%
+  footnote(general = text, threeparttable = TRUE, general_title = " ")
 ```
 
-The Pearson correlation factor, or **r**, (**TODO link**) is a normalized measure of how strongly two parameters are related. It ranges from -1 (perfect negative correlation) to 1 (perfect positive correlation), with 0 indicating no correlation.
+Table 5 shows that the number of rides on a given day is strongly—almost perfectly—correlated with **air temperature** for both groups. The following plots help illustrate this relationship. Each circle represents one day; 365 circles for each plot; the diagonal lines represent best linear fit and confidence intervals.
 
-At a high level, the coefficients point in the direction we'd expect. For example, ride count is negatively correlated with snow: the more snow, the fewer rides.
+```{r, fig.height=2, eval=TRUE}
 
-Ride count is strongly correlated with **air temperature** for both groups. This is clear enough from Fig.X(TODO).
-
-```{r, fig.height=2, eval=FALSE}
-
-alpha <- 0.4
+alpha <- 0.3
 
 temp_breaks <-
   scale_x_continuous(breaks = c(-10, 0, 10, 20))
@@ -370,7 +373,7 @@ p1 <- scatterplot %>%
   geom_vline(xintercept = 0, linetype = "dotted", size = 0.5) +
   temp_breaks +
   facet_wrap(~IS_MEMBER, labeller = labeller(IS_MEMBER = member_labeller)) +
-  labs(caption = "Temperature (\u00B0C) vs ride count") +
+  labs(caption = "Air temperature (\u00B0C) vs. number of rides") +
   guides(color = "none")
 
 p2 <- scatterplot %>%
@@ -383,21 +386,20 @@ p2 <- scatterplot %>%
   duration_breaks +
   facet_wrap(~IS_MEMBER, labeller = labeller(IS_MEMBER = member_labeller)) +
   labs(
-    caption = "Temperature (\u00B0C) vs ride duration (minutes)",
+    caption = "Air temperature (\u00B0C) vs. ride duration (minutes)",
   ) +
   guides(color = "none")
 
 grid.arrange(p1, p2, nrow = 1)
 ```
 
-**Rain** is more ambiguous. **r** is close to 0. Does this mean bike riders in Chicago are not influenced by rain at all? It is more ambiguous than that. In the 12-month period 256 days have no recorded rain, only 16 days with 1/2 inch or more daily total, and no days with 2 inches. On days with at least 1/2 inch of rain, Members rode 4% less total time, and Casual users rode 6% more. It simply did not rain enough to make this relationship clear; we are at the limits of this data.
+**Rain** is more ambiguous: correlation is close to 0. Does this mean bike-share users in Chicago are not influenced by rain at all? The more plausible explanation is that we are at the limits of this dataset. In the 12-month period, 256 days had no recorded rain, only 16 days had half an inch or more; on those days, Members rode for 4% less total time, and Casual users 6% more, than on days with less rain. In other words, it did not rain enough to make the relationship clear.
 
 The relationship with **Snow** is clearer, and snow itself is obviously not independent from temperature.
 
+These distributions confirms an observation from section 1: average ride duration remains nearly flat (more so for Members), but ride volume varies significantly.
 
-These distributions confirm the basic observation from section 1: average ride duration remains nearly the same (more so for Members), but the ride volume is highly influenced by environment.
-
-(Note: one outlier for Casual riders, 16 Feb 2021, was removed from this plot as it had an average duration of over 100 minutes. More on this in the appendix.)
+(Note: one outlier for Casual riders, 16 Feb 2021, was removed from the duration scatterplot as it had an average duration of over 100 minutes. More on this in the cleanup notes in the Appendix.)
 
 ### 4. Geographical
 
@@ -541,11 +543,11 @@ How to convert casual riders into members?
 
 ## Appendix
 
-### TODO. Limitations
+### Limitations
 
 The available dataset is limited. It does not, for example, contain any membership data, so seasonal trends could be partly attributable to membership growth, etc.
 
-### TODO. Out of scope
+### Out of scope
 
 Out of scope: 
 
@@ -557,7 +559,7 @@ Out of scope:
 * other modes of transport
 * region specifics
 
-### A. Data cleanup {#cleaning}
+### Data cleanup {#cleaning}
 
 February: 16-Feb-2021 had a few rides of close to 24 hours. 
 Overall, most long rides (12+ hours) are attributed to Casual riders, which likely corresponds to 24-hour rentals. Not enough info to interpret this further.
@@ -566,7 +568,7 @@ Test data; NOTES FROM GOOGLE DOC
 Presentation: log scale.
 
 
-### B. Links {#links}
+### Links {#links}
 
 Data sources (incl. Google Maps, Stamen).
 
@@ -576,8 +578,12 @@ Data sources (incl. Google Maps, Stamen).
    - https://cloud.google.com/bigquery
 1. Dataset
    - https://divvy-tripdata.s3.amazonaws.com/index.html
+1. NOAA Chicago daily weather. Collected at O'Hare Airport.
+   - https://www.ncdc.noaa.gov/cdo-web/datasets/GHCND/stations/GHCND:USW00094846/detail
+1. Pearson correlation coefficient
+   - https://en.wikipedia.org/wiki/Pearson_correlation_coefficient
 
-### C. Tools {#tools}
+### Tools {#tools}
 
 * Google Sheets
 * BigQuery
@@ -585,7 +591,7 @@ Data sources (incl. Google Maps, Stamen).
 * knitr (PDF)
 (links TODO)
 
-### D. Full data (weekly?)
+
 
 
 
