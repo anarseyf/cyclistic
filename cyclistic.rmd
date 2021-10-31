@@ -60,7 +60,7 @@ theme_no_axis_labels <- theme(axis.text = element_blank())
 
 ```{r functions, echo=FALSE}
 
-kable_custom <- function(data, ...) {
+kable_custom <- function(data, full_width = FALSE, ...) {
   kbl(
     data,
     booktabs = TRUE,
@@ -70,12 +70,13 @@ kable_custom <- function(data, ...) {
   ) %>%
     kable_styling(
       # position = "left",
-      latex_options = c("hold_position")
+      latex_options = c("HOLD_position"),
+      full_width = full_width
     )
 }
 
 bold_larger_fn <- function(x) {
-  cell_spec(x, bold = ifelse(x == max(x), TRUE, FALSE))
+  cell_spec(x, italic = ifelse(x == max(x), TRUE, FALSE))
 }
 
 weekday_ticks <- function() {
@@ -141,223 +142,205 @@ weekday_names_short <- c("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
 
 # Cyclistic
 
-- Anar Seyf (anar.seyf@gmail.com, github.com/anarseyf)
-- October 2021
+- Anar Seyf | anar.seyf@gmail.com
 - Capstone project | Google Data Analytics course #8 | Coursera
+- October 2021
+- Source code: github.com/anarseyf/cyclistic
 
 ---
 
-<!-- 
+## Introduction
 
-## Goal
-
-The objective of the report is to show differences between **Members** (those who purchased an annual membership) and **Casual** riders (those who pay for single rides or daily passes). Every part of the analysis shows (**TODO - synonym**) those categories side-by-side.
+This report is the capstone project for the Google Data Analytics professional certificate on Coursera [**[1]**](#links). The starting point is data from Cyclistic, a bike-sharing company which operates a network of classic and electric bicycles and docking stations in Chicago. The goal is to understand usage patterns between **Casual** riders (those who pay for single rides or day passes) and **Members** (those who purchased an annual membership), and to provide recommendations to the Cyclistic marketing team on how to convert casual riders into members.
 
 ---
 
 ## Data
 
-The **main data source** of the report is a 12-month window (October 2020 to September 2021, inclusive) from the dataset provided by Divvy **(link TODO)**. (See data cleaning notes in the Appendix.) The data consists of over 5 million unique records of bike rides in Chicago with these columns:
+Our main dataset contains individual ride records over a twelve-month period—October 2020 to September 2021, inclusive—provided in monthly .csv files. [**[1]**](#links). This amounts to over 5 million rows with these columns:
 
 * unique ride ID;
-* bicycle type (classic, docked, electric);
-* ride start and end time;
+* status (member or casual)
+* start and end time;
 * start and end docking station (ID and name);
 * start and end latitude/longitude;
-* status (member or casual)
+* bicycle type (classic, docked, electric);
 
-The **secondary data source** is the Chicago daily weather dataset from NOAA **(link TODO)** for the same time period. This seems highly pertinent background given the nature of the main data.
-
-The 5 million individual records are condensed into hourly, daily, weekly, and monthly **aggregates**, grouped by status (member vs casual). For example, the daily aggregates table consists of 730 entries (365 for Members and Casual users each) with columns for ride count and average duration.
-
-Throughout the report, more emphasis is given to *ride count*, as the main indicator of activity volume, than to ride *ride duration*.
-
-### Limitations
-
-The available dataset is limited. It does not, for example, contain any membership data, so seasonal trends could be partly attributable to membership growth, etc.
-
-### Out of scope
-
--TODO
-
+The individual records are aggregated into hourly, daily, and weekly tables, and grouped by status (member vs casual). For example, the daily aggregates table consists of 730 entries (365 for Members and Casual riders each) with columns for average daily ride count and average duration. (See appendix on [**[tools used]**](#tools) and [**[data cleanup steps]**](#cleanup).)
 
 ## Analysis
 
-
 ### 1. Members ride more often, casual users ride for longer.
 
-An average ride is about **28 minutes** long for casual users, **14 minutes** long for members. Members make an average of **7,479** rides per day, casual users **6,362** rides per day. (The number of distinct riders is unavailable in the data, so we can only refer to the overall population. **TODO** — so "total volume" instead of "more often"?)
+An average ride is about **14 minutes** long for Members and **28 minutes** long for Casual riders. Members make an average of **7,479** rides per day, compared to **6,362** for Casual riders. (The number of distinct riders is unavailable in the data, so we can only refer to the overall groups. Daily totals can provide a rough approximation, but only within the order of magnitude.) 
 
 Ride volume is lowest in February and highest in July-August. Casual ride volume exceeds that of Members in the summer months only.
 
+```{r, eval=TRUE}
+
+wide <- agg_monthly %>%
+  select(status, month_start, avg_count) %>%
+  spread(month_start, avg_count)
+
+month_starts <- colnames(wide)[2:13]
+colnames(wide) <- c(" ", months(as.Date(month_starts), abbreviate = TRUE))
+
+wide[, -1] <- round(wide[, -1])
+
+wide %>%
+  format(big.mark = ",") %>%
+  mutate(across(Oct:Sep, bold_larger_fn)) %>%
+  kable_custom(
+    full_width = TRUE,
+    escape = FALSE,
+    caption = "Average daily number of rides"
+  )
+```
+
 Ride duration is nearly flat for Members throughout the year; for Casual riders it increases by a few minutes in the summer months.
 
-(The month of February shows an abnormal peak in ride duration. It may be partially attributable to low ride volume and thus higher variance in the data, but is otherwise not readily explained here.)
+```{r, eval=TRUE}
 
-# ```{r}
+wide <- agg_monthly %>%
+  select(status, month_start, duration) %>%
+  spread(month_start, duration)
 
-# wide <- agg_monthly %>%
-#   select(status, month_start, duration) %>%
-#   spread(month_start, duration)
+month_starts <- colnames(wide)[2:13]
+colnames(wide) <- c(" ", months(as.Date(month_starts), abbreviate = TRUE))
 
-# month_starts <- colnames(wide)[2:13]
-# colnames(wide) <- c(" ", months(as.Date(month_starts), abbreviate = TRUE))
+wide[, -1] <- round(wide[, -1])
 
-# wide[, -1] <- round(wide[, -1])
+wide %>%
+  kable_custom(caption = "Average ride duration (minutes)")
+```
 
-# wide %>%
-#   kable_custom(caption = "Average ride duration (minutes)")
-# ```
-
-# ```{r}
-
-# wide <- agg_monthly %>%
-#   select(status, month_start, avg_count) %>%
-#   spread(month_start, avg_count)
-
-# month_starts <- colnames(wide)[2:13]
-# colnames(wide) <- c(" ", months(as.Date(month_starts), abbreviate = TRUE))
-
-# wide[, -1] <- round(wide[, -1])
-
-# wide %>%
-#   format(big.mark = ",") %>%
-#   mutate(across(Oct:Sep, bold_larger_fn)) %>%
-#   kable_custom(
-#     escape = FALSE,
-#     caption = "Average daily rides (count)"
-#   )
-# ```
-
-**TODO** — kable sparklines?
-
+(February has an abnormal spike in ride duration. It may be partly attributable to low ride volume and thus higher variance in the data, but is otherwise not readily explainable with available data. It seems likely to be weather-related as well—perhaps due to difficulties of reaching a docking station in snow; see section 3 for more details.)
 
 ### 2. Members ride all week, casual riders prefer weekends.
 
-Members' usage remains nearly flat, falling on Sunday. Casual users do most riding starting on Friday and through the weekend, peaking on Saturday.
+Ride volume remains nearly flat for Members through the week, reducing only on Sundays. Casual users do the most riding over the weekend, peaking on Saturdays.
 
-### By weekday
+```{r, eval=TRUE}
 
-# ```{r, fig.align='left'}
+wide <- agg_weekly_status %>%
+  select(-avg_duration) %>%
+  spread(dayofweek, avg_count)
 
-# wide <- agg_weekly_status %>%
-#   select(-avg_count) %>%
-#   spread(dayofweek, avg_duration)
+colnames(wide) <- c(" ", weekday_names_short)
 
-# colnames(wide) <- c(" ", weekday_names_short)
+wide %>%
+  format(big.mark = ",") %>%
+  mutate(across(Mon:Sun, bold_larger_fn)) %>%
+  kable_custom(
+    escape = FALSE,
+    caption = "Average daily number of rides"
+  )
+```
 
-# wide %>% kable_custom(caption = "Average daily duration (minutes)")
-# ```
+```{r, eval=TRUE}
 
-# ```{r}
+wide <- agg_weekly_status %>%
+  select(-avg_count) %>%
+  spread(dayofweek, avg_duration)
 
-# wide <- agg_weekly_status %>%
-#   select(-avg_duration) %>%
-#   spread(dayofweek, avg_count)
+colnames(wide) <- c(" ", weekday_names_short)
 
-# colnames(wide) <- c(" ", weekday_names_short)
+wide %>% kable_custom(caption = "Average ride duration (minutes)")
+```
 
-# wide %>%
-#   format(big.mark = ",") %>%
-#   mutate(across(Mon:Sun, bold_larger_fn)) %>%
-#   kable_custom(
-#     escape = FALSE,
-#     caption = "Average daily rides (count)"
-#   )
-# ```
+### Hourly heatmap
 
+Members' weekday pattern closely matches standard working hours (note especially the peak around 4-5pm). Weekend pattern much closer between the two groups, with volume peaking on Saturday afternoon.
 
-### Hourly
+```{r, fig.width=8, fig.height=3, eval=TRUE}
 
-Members: weekday pattern closely matching standard working hours (especially the peak around 4-5pm). Weekend pattern much closer between the two groups, with volume peaking on Saturday afternoon.
+agg_hourly %>%
+  ggplot(aes(
+    x = dayofweek,
+    y = factor(hour, levels = unique(rev(hour))),
+    fill = COUNT
+  )) +
+  geom_tile(color = "grey", position = position_dodge(width = 0.1)) +
+  scale_fill_viridis_c(option = "viridis", trans = pseudo_log_trans()) +
+  # scale_fill_gradientn(colors = heat.colors(20), trans = pseudo_log_trans()) +
+  # scale_fill_gradient(
+  #   low = "black", high = "yellow",
+  #   trans = pseudo_log_trans()
+  # ) +
+  scale_x_continuous(labels = weekday_ticks(), breaks = 1:7, expand = c(0, 0)) +
+  scale_y_discrete(labels = hour_ticks(), breaks = seq(0, 23, 4)) +
+  facet_wrap(~IS_MEMBER, labeller = labeller(IS_MEMBER = member_labeller)) +
+  labs(caption = "Ride count heatmap (time of day on vertical axis)")
+```
 
-# ```{r, fig.width=8, fig.height = 3}
+### 3. Ride counts and Weather
 
-# agg_hourly %>%
-#   ggplot(aes(
-#     x = dayofweek,
-#     y = factor(hour, levels = unique(rev(hour))),
-#     fill = COUNT
-#   )) +
-#   geom_tile(color = "grey", position = position_dodge(width = 0.1)) +
-#   scale_fill_viridis_c(option = "viridis", trans = pseudo_log_trans()) +
-#   # scale_fill_gradientn(colors = heat.colors(20), trans = pseudo_log_trans()) +
-#   # scale_fill_gradient(
-#   #   low = "black", high = "yellow",
-#   #   trans = pseudo_log_trans()
-#   # ) +
-#   scale_x_continuous(labels = weekday_ticks(), breaks = 1:7, expand = c(0, 0)) +
-#   scale_y_discrete(labels = hour_ticks(), breaks = seq(0, 23, 4)) +
-#   facet_wrap(~IS_MEMBER, labeller = labeller(IS_MEMBER = member_labeller)) +
-#   labs(caption = "Ride count heatmap (time of day on vertical axis)")
-# ```
-
-### Ride counts and Weather
+Chicago daily weather dataset from NOAA [**[1]**](#links) for the same time period.
 
 Average daily ride count and Chicago weather, Oct'20—Sep'21, by week. Background color is average air temperature that week.
 
-# ```{r, fig.width=10, fig.height=3}
+```{r, fig.width=10, fig.height=3, eval=FALSE}
 
-# month_labels <- function(x) {
-#   months(x, abbreviate = TRUE)
-# }
+month_labels <- function(x) {
+  months(x, abbreviate = TRUE)
+}
 
-# df <- agg_weekly_weather
+df <- agg_weekly_weather
 
-# df %>%
-#   ggplot(aes(x = week_start)) +
-#   geom_bar(aes(y = Inf, fill = avg_temp),
-#     stat = "identity", alpha = 0.3, position = "dodge"
-#   ) +
-#   scale_fill_viridis_c(option = "magma") +
-#   new_scale_fill() +
-#   # new_scale_color() +
+df %>%
+  ggplot(aes(x = week_start)) +
+  geom_bar(aes(y = Inf, fill = avg_temp),
+    stat = "identity", alpha = 0.3, position = "dodge"
+  ) +
+  scale_fill_viridis_c(option = "magma") +
+  new_scale_fill() +
+  # new_scale_color() +
 
-#   geom_step(aes(
-#     y = avg_count,
-#     group = is_member,
-#     color = is_member,
-#   ),
-#   size = 1.25,
-#   stat = "identity"
-#   ) +
-#   geom_point(aes(
-#     y = avg_count,
-#     group = is_member,
-#     color = is_member,
-#     fill = is_member
-#   ),
-#   shape = 22, # https://r-graphics.org/recipe-scatter-shapes#discussion-28
-#   # fill = "white",
-#   size = 2,
-#   stroke = 2
-#   ) +
-#   colors_IS_MEMBER +
-#   scale_fill_manual(values = c("white", "darkgreen")) +
+  geom_step(aes(
+    y = avg_count,
+    group = is_member,
+    color = is_member,
+  ),
+  size = 1.25,
+  stat = "identity"
+  ) +
+  geom_point(aes(
+    y = avg_count,
+    group = is_member,
+    color = is_member,
+    fill = is_member
+  ),
+  shape = 22, # https://r-graphics.org/recipe-scatter-shapes#discussion-28
+  # fill = "white",
+  size = 2,
+  stroke = 2
+  ) +
+  colors_IS_MEMBER +
+  scale_fill_manual(values = c("white", "darkgreen")) +
 
-#   # new_scale_fill() +
-#   # new_scale_color() +
+  # new_scale_fill() +
+  # new_scale_color() +
 
-#   geom_point(
-#     data = subset(df, total_snow > 0),
-#     aes(y = -2000, size = total_snow / 10), shape = 23, fill = "#9b037a", alpha = 0.7
-#   ) +
-#   guides(size = guide_legend(title = "Snow (mm)")) +
-#   geom_point(
-#     data = subset(df, total_rain > 0),
-#     aes(y = -1000, size = total_rain), color = "#2192d3", alpha = 0.7
-#   ) +
-#   scale_x_date(expand = c(0, 0), labels = month_labels, date_breaks = "months") +
-#   scale_y_continuous(expand = c(0, 1000)) +
-#   geom_vline(xintercept = as.Date("2021-01-01"), size = 0.5) +
-#   theme(legend.position = "right") +
-#   labs(caption = "Weather Oct 2020-Sep 2021. Background = avg temp, etc.")
+  geom_point(
+    data = subset(df, total_snow > 0),
+    aes(y = -2000, size = total_snow / 10), shape = 23, fill = "#9b037a", alpha = 0.7
+  ) +
+  guides(size = guide_legend(title = "Snow (mm)")) +
+  geom_point(
+    data = subset(df, total_rain > 0),
+    aes(y = -1000, size = total_rain), color = "#2192d3", alpha = 0.7
+  ) +
+  scale_x_date(expand = c(0, 0), labels = month_labels, date_breaks = "months") +
+  scale_y_continuous(expand = c(0, 1000)) +
+  geom_vline(xintercept = as.Date("2021-01-01"), size = 0.5) +
+  theme(legend.position = "right") +
+  labs(caption = "Weather Oct 2020-Sep 2021. Background = avg temp, etc.")
 ```
 
-# ```{r}
-# weather_correlations %>%
-#   kable_custom(caption = "Correlation (r): weather and ride count")
-# ```
+```{r, eval=FALSE}
+weather_correlations %>%
+  kable_custom(caption = "Correlation (r): weather and ride count")
+```
 
 The Pearson correlation factor, or **r**, (**TODO link**) is a normalized measure of how strongly two parameters are related. It ranges from -1 (perfect negative correlation) to 1 (perfect positive correlation), with 0 indicating no correlation.
 
@@ -365,47 +348,47 @@ At a high level, the coefficients point in the direction we'd expect. For exampl
 
 Ride count is strongly correlated with **air temperature** for both groups. This is clear enough from Fig.X(TODO).
 
-# ```{r, fig.height=2}
+```{r, fig.height=2, eval=FALSE}
 
-# alpha <- 0.4
+alpha <- 0.4
 
-# temp_breaks <-
-#   scale_x_continuous(breaks = c(-10, 0, 10, 20))
+temp_breaks <-
+  scale_x_continuous(breaks = c(-10, 0, 10, 20))
 
-# duration_breaks <- scale_y_continuous(breaks = c(20, 30, 40))
+duration_breaks <- scale_y_continuous(breaks = c(20, 30, 40))
 
-# scatterplot <- agg_daily_trips_weather %>%
-#   filter(AVG_DURATION < 100)
+scatterplot <- agg_daily_trips_weather %>%
+  filter(AVG_DURATION < 100)
 
-# p1 <- scatterplot %>%
-#   ggplot(
-#     aes(x = temp_avg, y = COUNT, color = IS_MEMBER)
-#   ) +
-#   colors_IS_MEMBER +
-#   geom_point(alpha = alpha) +
-#   geom_smooth(method = "lm") +
-#   geom_vline(xintercept = 0, linetype = "dotted", size = 0.5) +
-#   temp_breaks +
-#   facet_wrap(~IS_MEMBER, labeller = labeller(IS_MEMBER = member_labeller)) +
-#   labs(caption = "Temperature (\u00B0C) vs ride count") +
-#   guides(color = "none")
+p1 <- scatterplot %>%
+  ggplot(
+    aes(x = temp_avg, y = COUNT, color = IS_MEMBER)
+  ) +
+  colors_IS_MEMBER +
+  geom_point(alpha = alpha) +
+  geom_smooth(method = "lm") +
+  geom_vline(xintercept = 0, linetype = "dotted", size = 0.5) +
+  temp_breaks +
+  facet_wrap(~IS_MEMBER, labeller = labeller(IS_MEMBER = member_labeller)) +
+  labs(caption = "Temperature (\u00B0C) vs ride count") +
+  guides(color = "none")
 
-# p2 <- scatterplot %>%
-#   ggplot(aes(x = temp_avg, y = AVG_DURATION, color = IS_MEMBER)) +
-#   colors_IS_MEMBER +
-#   geom_point(alpha = alpha) +
-#   geom_smooth(method = "lm") +
-#   geom_vline(xintercept = 0, linetype = "dotted", size = 0.5) +
-#   temp_breaks +
-#   duration_breaks +
-#   facet_wrap(~IS_MEMBER, labeller = labeller(IS_MEMBER = member_labeller)) +
-#   labs(
-#     caption = "Temperature (\u00B0C) vs ride duration (minutes)",
-#   ) +
-#   guides(color = "none")
+p2 <- scatterplot %>%
+  ggplot(aes(x = temp_avg, y = AVG_DURATION, color = IS_MEMBER)) +
+  colors_IS_MEMBER +
+  geom_point(alpha = alpha) +
+  geom_smooth(method = "lm") +
+  geom_vline(xintercept = 0, linetype = "dotted", size = 0.5) +
+  temp_breaks +
+  duration_breaks +
+  facet_wrap(~IS_MEMBER, labeller = labeller(IS_MEMBER = member_labeller)) +
+  labs(
+    caption = "Temperature (\u00B0C) vs ride duration (minutes)",
+  ) +
+  guides(color = "none")
 
-# grid.arrange(p1, p2, nrow = 1)
-# ```
+grid.arrange(p1, p2, nrow = 1)
+```
 
 **Rain** is more ambiguous. **r** is close to 0. Does this mean bike riders in Chicago are not influenced by rain at all? It is more ambiguous than that. In the 12-month period 256 days have no recorded rain, only 16 days with 1/2 inch or more daily total, and no days with 2 inches. On days with at least 1/2 inch of rain, Members rode 4% less total time, and Casual users rode 6% more. It simply did not rain enough to make this relationship clear; we are at the limits of this data.
 
@@ -433,87 +416,82 @@ Each dot is a bike docking station. Stations highlighed **yellow-red** have more
 
 TODO: Heatmap: instead of each weekday, take a month out of each quarter?
 
+```{r, eval=FALSE}
 
-# ```{r, eval=TRUE}
+index <- stations_diff$diff > 0
 
-# index <- stations_diff$diff > 0
+# TODO — try log_trans scale instead?
 
-# # TODO — try log_trans scale instead?
+stations_diff$log_diff[index] <- log10(stations_diff$diff[index])
+stations_diff$log_diff[stations_diff$diff <= 0] <- NA
 
-# stations_diff$log_diff[index] <- log10(stations_diff$diff[index])
-# stations_diff$log_diff[stations_diff$diff <= 0] <- NA
+# map12 <- get_map(location = "Chicago", zoom = 12, maptype = "toner")
+# map13 <- get_map(location = "Chicago", zoom = 13, maptype = "toner")
 
-# # map12 <- get_map(location = "Chicago", zoom = 12, maptype = "toner")
-# # map13 <- get_map(location = "Chicago", zoom = 13, maptype = "toner")
-
-# alpha <- 0.6
-# darken <- 0.4
-# ```
+alpha <- 0.6
+darken <- 0.4
+```
 
 ### Friday morning (8-10am)
 
-# ```{r, eval=TRUE, fig.width=6, fig.height=3}
+```{r, fig.width=6, fig.height=3, eval=FALSE}
 
-# heatmap_large <- stations_diff %>%
-#   filter(dayofweek == 5) %>%
-#   filter(hour == 8 | hour == 9)
+heatmap_large <- stations_diff %>%
+  filter(dayofweek == 5) %>%
+  filter(hour == 8 | hour == 9)
 
-# # ggmap(map12, darken = darken) +
-# ggplot() +
-#   geom_point(
-#     data = heatmap_large,
-#     aes(x = lng, y = lat, color = log_diff), alpha = alpha
-#   ) +
-#   map_color_scale +
-#   theme_no_axis_labels
-# # facet_wrap(~is_member, labeller = labeller(is_member = member_labeller))
+# ggmap(map12, darken = darken) +
+ggplot() +
+  geom_point(
+    data = heatmap_large,
+    aes(x = lng, y = lat, color = log_diff), alpha = alpha
+  ) +
+  map_color_scale +
+  theme_no_axis_labels
+# facet_wrap(~is_member, labeller = labeller(is_member = member_labeller))
 ```
-
 
 Let's look at the same pattern across the entire week.
 
-
 ### Morning (8-9am)
 
-# ```{r, eval=TRUE, fig.height=3}
-# heatmap1 <- stations_diff %>%
-#   filter(hour == 8)
+```{r, fig.height=3, eval=FALSE}
+heatmap1 <- stations_diff %>%
+  filter(hour == 8)
 
-# # ggmap(map13, darken = darken) +
-# ggplot() +
-#   geom_point(
-#     data = heatmap1,
-#     aes(x = lng, y = lat, color = log_diff), alpha = alpha
-#   ) +
-#   map_color_scale +
-#   theme_no_axis_labels +
-#   facet_grid(is_member ~ dayofweek, labeller = labeller(dayofweek = weekday_labeller, is_member = member_labeller))
-# ```
+# ggmap(map13, darken = darken) +
+ggplot() +
+  geom_point(
+    data = heatmap1,
+    aes(x = lng, y = lat, color = log_diff), alpha = alpha
+  ) +
+  map_color_scale +
+  theme_no_axis_labels +
+  facet_grid(is_member ~ dayofweek, labeller = labeller(dayofweek = weekday_labeller, is_member = member_labeller))
+```
 
 A distinct weekday pattern. Apart from volume, the "fingerprints" look similar for the two groups. On weekends it looks different: there isn't a lot of casual riding into this area in the morning.
 
 
 ### Afternoon (4-5pm)
 
-# ```{r, eval=TRUE, fig.height=3}
-# heatmap2 <- stations_diff %>%
-#   filter(hour == 16)
+```{r, fig.height=3, eval=FALSE}
+heatmap2 <- stations_diff %>%
+  filter(hour == 16)
 
-# # ggmap(map13, darken = darken) +
-# ggplot() +
-#   geom_point(
-#     data = heatmap2,
-#     aes(x = lng, y = lat, color = log_diff), alpha = alpha
-#   ) +
-#   map_color_scale +
-#   theme_no_axis_labels +
-#   facet_grid(is_member ~ dayofweek, labeller = labeller(dayofweek = weekday_labeller, is_member = member_labeller))
-# ```
+# ggmap(map13, darken = darken) +
+ggplot() +
+  geom_point(
+    data = heatmap2,
+    aes(x = lng, y = lat, color = log_diff), alpha = alpha
+  ) +
+  map_color_scale +
+  theme_no_axis_labels +
+  facet_grid(is_member ~ dayofweek, labeller = labeller(dayofweek = weekday_labeller, is_member = member_labeller))
+```
 
 More dispersion away from center (TODO).
 Key takeaway: patterns are distinct by time of day and weekday vs weekend, but less so between C and M.
-
--->
 
 ---
 
@@ -521,16 +499,18 @@ Key takeaway: patterns are distinct by time of day and weekday vs weekend, but l
 
 ### 1. Casual riders use the service as more of a luxury, and members as a utility.
 
-   - Weekend spike
-   - Ride duration: starting a ride is a bigger commitment for a casual user. A 15-minute ride is a non-issue for a member, but not if you are paying for a single pass.
-   - The distinctions are not due to any inherent difference between rider types, but due to the convenience factor. (Running errands, commuting.) Barrier to entry is higher for C than M.
+- Weekend spike
+- Ride duration: starting a ride is a bigger commitment for a casual user. A 15-minute ride is a non-issue for a member, but not if you are paying for a single pass.
+- The distinctions are not due to any inherent difference between rider types, but due to the convenience factor. (Running errands, commuting.) Barrier to entry is higher for C than M.
 
 ### 2. The two groups' usage patterns overlap.
 
-   - Similar geographic patterns, hourly patterns, weekday vs weekend
-     * Commuting, daily tasks?
-     * Similarities M vs C? Modes (work hours vs weekend)
-     * Lower variance for M than C. More consistent patterns.
+The groups are not inherently distinct in their goals. The patterns likely differ as a result of ...
+
+- Similar geographic patterns, hourly patterns, weekday vs weekend
+- Commuting, daily tasks?
+* Similarities M vs C? Modes (work hours vs weekend)
+* Lower variance for M than C. More consistent patterns.
 
 ---
 
@@ -550,22 +530,23 @@ How to convert casual riders into members?
 - Suggest bikes as a mode of work commute
 - Run promotions on weekends with major sporting events where cycling would help avoid traffic and parking problems
 
-### 3. People outside the system. Never tried the service (or cycling regularly).
+### 3. ~~People outside the system. Never tried the service (or cycling regularly).~~
 
 - Why? Does their neighborhood lack docking stations? Underserved areas? Too far to work?
 - Do they need help with route planning?
 - Work with the city on expanding cycling routes and making cycling safer.
+- Weather? Seasons?
 
 ---
 
 ## Appendix
 
-### A. Data cleanup
+### TODO. Limitations
 
-February: 16-Feb-2021 had a few rides of close to 24 hours. 
-Overall, most long rides (12+ hours) are attributed to Casual riders, which likely corresponds to 24-hour rentals. Not enough info to interpret this further.
+The available dataset is limited. It does not, for example, contain any membership data, so seasonal trends could be partly attributable to membership growth, etc.
 
-Presentation: log scale.
+### TODO. Out of scope
+
 Out of scope: 
 
 * bike types; 
@@ -576,16 +557,33 @@ Out of scope:
 * other modes of transport
 * region specifics
 
-### B. Links
+### A. Data cleanup {#cleaning}
+
+February: 16-Feb-2021 had a few rides of close to 24 hours. 
+Overall, most long rides (12+ hours) are attributed to Casual riders, which likely corresponds to 24-hour rentals. Not enough info to interpret this further.
+Test data; NOTES FROM GOOGLE DOC
+
+Presentation: log scale.
+
+
+### B. Links {#links}
 
 Data sources (incl. Google Maps, Stamen).
 
-### C. Tools used (and not used)
+1. Coursera — Google Data Analytics
+   - https://www.coursera.org/professional-certificates/google-data-analytics
+1. BigQuery
+   - https://cloud.google.com/bigquery
+1. Dataset
+   - https://divvy-tripdata.s3.amazonaws.com/index.html
+
+### C. Tools {#tools}
 
 * Google Sheets
 * BigQuery
 * R (in VSCode)
 * knitr (PDF)
+(links TODO)
 
 ### D. Full data (weekly?)
 
