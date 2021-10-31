@@ -37,7 +37,7 @@ loadfonts()
 
 # TODO — theme_tufte? lol
 
-theme_set(theme_tufte(
+theme_set(theme_minimal(
   # base_family = "CM Roman",
 ))
 theme_update(
@@ -46,7 +46,10 @@ theme_update(
   strip.background = element_rect(fill = "white", color = NA),
   strip.text = element_text(size = 11),
   axis.text = element_text(size = 9),
+  axis.line = element_line(size = 0.25)
 )
+
+colors_IS_MEMBER <- scale_color_manual(values = c("darkred", "darkgreen"))
 ```
 
 ```{r functions, echo=FALSE}
@@ -150,8 +153,8 @@ agg_hourly %>%
     fill = COUNT
   )) +
   geom_tile(color = "grey", position = position_dodge(width = 0.1)) +
-  # scale_fill_viridis_c(option = "plasma") +
-  scale_fill_gradientn(colors = heat.colors(20), trans = pseudo_log_trans()) +
+  scale_fill_viridis_c(option = "viridis", trans = pseudo_log_trans()) +
+  # scale_fill_gradientn(colors = heat.colors(20), trans = pseudo_log_trans()) +
   # scale_fill_gradient(
   #   low = "black", high = "yellow",
   #   trans = pseudo_log_trans()
@@ -173,12 +176,18 @@ Average daily ride count and Chicago weather, Oct'20—Sep'21, by week. Backgrou
 
 ```{r, fig.width=10, fig.height=3}
 
-agg_weekly_weather %>%
+month_labels <- function(x) {
+  months(x, abbreviate = TRUE)
+}
+
+df <- agg_weekly_weather
+
+df %>%
   ggplot(aes(x = week_start)) +
   geom_bar(aes(y = Inf, fill = avg_temp),
     stat = "identity", alpha = 0.3, position = "dodge"
   ) +
-  scale_fill_viridis_c() +
+  scale_fill_viridis_c(option = "magma") +
   new_scale_fill() +
   # new_scale_color() +
 
@@ -187,29 +196,38 @@ agg_weekly_weather %>%
     group = is_member,
     color = is_member,
   ),
-  size = 1.5,
+  size = 1.25,
   stat = "identity"
   ) +
   geom_point(aes(
     y = avg_count,
     group = is_member,
     color = is_member,
+    fill = is_member
   ),
-  shape = 21, # https://r-graphics.org/recipe-scatter-shapes#discussion-28
-  fill = "white",
+  shape = 22, # https://r-graphics.org/recipe-scatter-shapes#discussion-28
+  # fill = "white",
   size = 2,
   stroke = 2
   ) +
+  colors_IS_MEMBER +
+  scale_fill_manual(values = c("white", "darkgreen")) +
 
-  # scale_color_manual(values = c("darkred", "darkgreen")) +
-  # scale_fill_manual(values = c("darkred", "darkgreen")) +
   # new_scale_fill() +
   # new_scale_color() +
-  # geom_point(aes(y = 0, size = total_snow / 10),
-  #   color = "#e30f84", alpha = 0.7
-  # ) +
-  # geom_point(aes(y = 0, size = total_rain), color = "#2192d3", alpha = 0.7) +
-  scale_x_date(expand = c(0, 0)) +
+
+  geom_point(
+    data = subset(df, total_snow > 0),
+    aes(y = -2000, size = total_snow / 10), shape = 23, fill = "#9b037a", alpha = 0.7
+  ) +
+  guides(size = guide_legend(title = "Snow (mm)")) +
+  geom_point(
+    data = subset(df, total_rain > 0),
+    aes(y = -1000, size = total_rain), color = "#2192d3", alpha = 0.7
+  ) +
+  scale_x_date(expand = c(0, 0), labels = month_labels, date_breaks = "months") +
+  scale_y_continuous(expand = c(0, 1000)) +
+  geom_vline(xintercept = as.Date("2021-01-01"), size = 0.5) +
   theme(legend.position = "right") +
   labs(caption = "Weather Oct 2020-Sep 2021. Background = avg temp, etc.")
 ```
@@ -238,19 +256,23 @@ p1 <- scatterplot %>%
   ggplot(
     aes(x = temp_avg, y = COUNT, color = IS_MEMBER)
   ) +
+  colors_IS_MEMBER +
   geom_point(alpha = alpha) +
   geom_smooth(method = "lm") +
+  geom_vline(xintercept = 0, linetype = "dotted", size = 0.5) +
   facet_wrap(~IS_MEMBER, labeller = labeller(IS_MEMBER = member_labeller)) +
-  labs(caption = "Correlation: temp vs ride count") +
+  labs(caption = "Temperature (\u00B0C) vs ride count") +
   guides(color = "none")
 
 p2 <- scatterplot %>%
   ggplot(aes(x = temp_avg, y = AVG_DURATION, color = IS_MEMBER)) +
+  colors_IS_MEMBER +
   geom_point(alpha = alpha) +
   geom_smooth(method = "lm") +
+  geom_vline(xintercept = 0, linetype = "dotted", size = 0.5) +
   facet_wrap(~IS_MEMBER, labeller = labeller(IS_MEMBER = member_labeller)) +
   labs(
-    caption = "Correlation: temp vs ride duration",
+    caption = "Temperature (\u00B0C) vs ride duration (minutes)",
   ) +
   guides(color = "none")
 
