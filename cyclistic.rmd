@@ -6,7 +6,7 @@ output: pdf_document
 knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
 
 packages <- c(
-  "tidyr", "knitr", "ggplot2", "ggmap", "gridExtra",
+  "tidyr", "knitr", "ggplot2", "ggmap", "gridExtra", "ggthemes",
   "maps", "tibble", "ggnewscale", "kableExtra", "tinytex", "extrafont", "fontcm"
 )
 install.packages(setdiff(packages, rownames(installed.packages())),
@@ -27,6 +27,7 @@ library(grid)
 library(scales)
 library(extrafont)
 library(fontcm)
+library(ggthemes)
 
 font_install("fontcm")
 loadfonts()
@@ -36,15 +37,15 @@ loadfonts()
 
 # TODO — theme_tufte? lol
 
-theme_set(theme_light(
-  base_family = "CM Roman",
+theme_set(theme_tufte(
+  # base_family = "CM Roman",
 ))
 theme_update(
   axis.title = element_blank(),
   legend.position = "none",
-  strip.background = element_rect(fill = "white"),
-  strip.text = element_text(color = "black", size = 10),
-  axis.text = element_text(size = 10, family = "CM Sans"),
+  strip.background = element_rect(fill = "white", color = NA),
+  strip.text = element_text(size = 11),
+  axis.text = element_text(size = 9),
 )
 ```
 
@@ -155,17 +156,17 @@ agg_hourly %>%
   #   low = "black", high = "yellow",
   #   trans = pseudo_log_trans()
   # ) +
-  scale_x_continuous(labels = weekday_ticks(), breaks = 1:7) +
+  scale_x_continuous(labels = weekday_ticks(), breaks = 1:7, expand = c(0, 0)) +
   scale_y_discrete(labels = hour_ticks(), breaks = seq(0, 23, 4)) +
   facet_wrap(~IS_MEMBER, labeller = labeller(IS_MEMBER = member_labeller)) +
   labs(caption = "Ride count heatmap (time of day on vertical axis)")
 ```
 
-
+<!--
 ### 3. Seasonal and Weather
 
 **TODO** — eliminate 0 rain/snow circles.
-
+-->
 #### Ride counts and Weather
 
 Average daily ride count and Chicago weather, Oct'20—Sep'21, by week. Background color is average air temperature that week.
@@ -179,15 +180,37 @@ agg_weekly_weather %>%
   ) +
   scale_fill_viridis_c() +
   new_scale_fill() +
-  # geom_bar(aes(y = avg_count, fill = is_member), stat = "identity") +
+  # new_scale_color() +
+
   geom_step(aes(
-    y = avg_count, group = is_member,
-    color = is_member, size = 0.5
-  ), stat = "identity") +
-  geom_point(aes(y = 0, size = total_snow / 10),
-    color = "#e30f84", alpha = 0.7
+    y = avg_count,
+    group = is_member,
+    color = is_member,
+  ),
+  size = 1.5,
+  stat = "identity"
   ) +
-  geom_point(aes(y = 0, size = total_rain), color = "#2192d3", alpha = 0.7) +
+  geom_point(aes(
+    y = avg_count,
+    group = is_member,
+    color = is_member,
+  ),
+  shape = 21, # https://r-graphics.org/recipe-scatter-shapes#discussion-28
+  fill = "white",
+  size = 2,
+  stroke = 2
+  ) +
+
+  # scale_color_manual(values = c("darkred", "darkgreen")) +
+  # scale_fill_manual(values = c("darkred", "darkgreen")) +
+  # new_scale_fill() +
+  # new_scale_color() +
+  # geom_point(aes(y = 0, size = total_snow / 10),
+  #   color = "#e30f84", alpha = 0.7
+  # ) +
+  # geom_point(aes(y = 0, size = total_rain), color = "#2192d3", alpha = 0.7) +
+  scale_x_date(expand = c(0, 0)) +
+  theme(legend.position = "right") +
   labs(caption = "Weather Oct 2020-Sep 2021. Background = avg temp, etc.")
 ```
 
@@ -196,11 +219,13 @@ weather_correlations %>%
   kable_custom(caption = "Correlation (r): weather and ride count")
 ```
 
+<!--
 The Pearson correlation factor, or **r**, (**TODO link**) is a normalized measure of how strongly two parameters are related. It ranges from -1 (perfect negative correlation) to 1 (perfect positive correlation), with 0 indicating no correlation.
 
 At a high level, the coefficients point in the direction we'd expect. For example, ride count is negatively correlated with snow: the more snow, the fewer rides.
 
 Ride count is strongly correlated with **air temperature** for both groups. This is clear enough from Fig.X(TODO).
+-->
 
 ```{r, fig.height=2}
 
@@ -215,47 +240,17 @@ p1 <- scatterplot %>%
   ) +
   geom_point(alpha = alpha) +
   geom_smooth(method = "lm") +
-  facet_wrap(~IS_MEMBER) +
-  labs(title = "Correlation: temp vs ride count") +
+  facet_wrap(~IS_MEMBER, labeller = labeller(IS_MEMBER = member_labeller)) +
+  labs(caption = "Correlation: temp vs ride count") +
   guides(color = "none")
 
 p2 <- scatterplot %>%
   ggplot(aes(x = temp_avg, y = AVG_DURATION, color = IS_MEMBER)) +
   geom_point(alpha = alpha) +
   geom_smooth(method = "lm") +
-  facet_wrap(~IS_MEMBER) +
+  facet_wrap(~IS_MEMBER, labeller = labeller(IS_MEMBER = member_labeller)) +
   labs(
-    title = "Correlation: temp vs ride duration",
-  ) +
-  guides(color = "none")
-
-grid.arrange(p1, p2, nrow = 1)
-```
-
-```{r, fig.height=2}
-
-alpha <- 0.4
-
-scatterplot2 <- scatterplot %>%
-  filter(temp_avg >= -5)
-
-p1 <- scatterplot2 %>%
-  ggplot(
-    aes(x = temp_avg, y = COUNT, color = IS_MEMBER)
-  ) +
-  geom_point(alpha = alpha) +
-  geom_smooth(method = "lm") +
-  facet_wrap(~IS_MEMBER) +
-  labs(title = "Correlation: temp vs ride count") +
-  guides(color = "none")
-
-p2 <- scatterplot2 %>%
-  ggplot(aes(x = temp_avg, y = AVG_DURATION, color = IS_MEMBER)) +
-  geom_point(alpha = alpha) +
-  geom_smooth(method = "lm") +
-  facet_wrap(~IS_MEMBER) +
-  labs(
-    title = "Correlation: temp vs ride duration",
+    caption = "Correlation: temp vs ride duration",
   ) +
   guides(color = "none")
 
@@ -324,7 +319,7 @@ ggmap(map12, darken = darken) +
     data = heatmap_large,
     aes(x = lng, y = lat, color = log_diff), alpha = alpha
   ) + color_scale +
-  facet_wrap(~is_member)
+  facet_wrap(~is_member, labeller = labeller(is_member = member_labeller))
 ```
 
 
@@ -343,7 +338,7 @@ ggmap(map13, darken = darken) +
     data = heatmap_member,
     aes(x = lng, y = lat, color = log_diff), alpha = alpha
   ) + color_scale +
-  facet_grid(is_member ~ dayofweek)
+  facet_grid(is_member ~ dayofweek, labeller = labeller(is_member = member_labeller))
 ```
 
 A distinct weekday pattern. Apart from volume, the "fingerprints" look similar for the two groups. On weekends it looks different: there isn't a lot of casual riding into this area in the morning.
@@ -362,7 +357,7 @@ ggmap(map13, darken = darken) +
     aes(x = lng, y = lat, color = log_diff), alpha = alpha
   ) +
   color_scale +
-  facet_grid(is_member ~ dayofweek)
+  facet_grid(is_member ~ dayofweek, labeller = labeller(is_member = member_labeller))
 ```
 
 More dispersion away from center (TODO).
@@ -525,7 +520,7 @@ wide <- agg_monthly %>%
   spread(month_start, avg_count)
 
 month_starts <- colnames(wide)[2:13]
-colnames(wide) <- c("Status", months(as.Date(month_starts), abbreviate = TRUE))
+colnames(wide) <- c(" ", months(as.Date(month_starts), abbreviate = TRUE))
 
 wide[, -1] <- round(wide[, -1])
 
