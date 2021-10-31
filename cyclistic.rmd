@@ -109,6 +109,10 @@ to_readable_hour <- function(h) {
 member_labeller <- function(v) {
   ifelse(v == "true", "Member", "Casual")
 }
+
+weekday_labeller <- function(v) {
+  weekday_names_short[as.numeric(v)]
+}
 ```
 
 ```{r data imports}
@@ -448,13 +452,13 @@ alpha <- 0.6
 darken <- 0.4
 ```
 
-### Friday afternoon (4-5pm)
+### Friday morning (8-10am)
 
 ```{r, eval=TRUE, fig.width=6, fig.height=3}
 
 heatmap_large <- stations_diff %>%
-  filter(dayofweek < 6) %>%
-  filter(hour == 11)
+  filter(dayofweek == 5) %>%
+  filter(hour == 8 | hour == 9)
 
 # ggmap(map12, darken = darken) +
 ggplot() +
@@ -474,18 +478,18 @@ Let's look at the same pattern across the entire week.
 ### Morning (8-9am)
 
 ```{r, eval=TRUE, fig.height=3}
-heatmap_member <- stations_diff %>%
+heatmap1 <- stations_diff %>%
   filter(hour == 8)
 
 # ggmap(map13, darken = darken) +
 ggplot() +
   geom_point(
-    data = heatmap_member,
+    data = heatmap1,
     aes(x = lng, y = lat, color = log_diff), alpha = alpha
   ) +
   map_color_scale +
   theme_no_axis_labels +
-  facet_grid(is_member ~ dayofweek, labeller = labeller(is_member = member_labeller))
+  facet_grid(is_member ~ dayofweek, labeller = labeller(dayofweek = weekday_labeller, is_member = member_labeller))
 ```
 
 A distinct weekday pattern. Apart from volume, the "fingerprints" look similar for the two groups. On weekends it looks different: there isn't a lot of casual riding into this area in the morning.
@@ -494,18 +498,18 @@ A distinct weekday pattern. Apart from volume, the "fingerprints" look similar f
 ### Afternoon (4-5pm)
 
 ```{r, eval=TRUE, fig.height=3}
-heatmap_casual <- stations_diff %>%
+heatmap2 <- stations_diff %>%
   filter(hour == 16)
 
 # ggmap(map13, darken = darken) +
 ggplot() +
   geom_point(
-    data = heatmap_casual,
+    data = heatmap2,
     aes(x = lng, y = lat, color = log_diff), alpha = alpha
   ) +
   map_color_scale +
   theme_no_axis_labels +
-  facet_grid(is_member ~ dayofweek, labeller = labeller(is_member = member_labeller))
+  facet_grid(is_member ~ dayofweek, labeller = labeller(dayofweek = weekday_labeller, is_member = member_labeller))
 ```
 
 More dispersion away from center (TODO).
