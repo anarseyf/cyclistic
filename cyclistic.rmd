@@ -141,7 +141,7 @@ weekday_names_short <- c("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
 
 # Cyclistic
 
-- Anar Seyf (anar.seyf@gmail.com)
+- Anar Seyf (anar.seyf@gmail.com, github.com/anarseyf)
 - October 2021
 - Capstone project | Google Data Analytics course #8 | Coursera
 
@@ -433,42 +433,40 @@ Each dot is a bike docking station. Stations highlighed **yellow-red** have more
 
 TODO: Heatmap: instead of each weekday, take a month out of each quarter?
 
--->
 
+# ```{r, eval=TRUE}
 
-```{r, eval=TRUE}
+# index <- stations_diff$diff > 0
 
-index <- stations_diff$diff > 0
+# # TODO — try log_trans scale instead?
 
-# TODO — try log_trans scale instead?
+# stations_diff$log_diff[index] <- log10(stations_diff$diff[index])
+# stations_diff$log_diff[stations_diff$diff <= 0] <- NA
 
-stations_diff$log_diff[index] <- log10(stations_diff$diff[index])
-stations_diff$log_diff[stations_diff$diff <= 0] <- NA
+# # map12 <- get_map(location = "Chicago", zoom = 12, maptype = "toner")
+# # map13 <- get_map(location = "Chicago", zoom = 13, maptype = "toner")
 
-# map12 <- get_map(location = "Chicago", zoom = 12, maptype = "toner")
-# map13 <- get_map(location = "Chicago", zoom = 13, maptype = "toner")
-
-alpha <- 0.6
-darken <- 0.4
-```
+# alpha <- 0.6
+# darken <- 0.4
+# ```
 
 ### Friday morning (8-10am)
 
-```{r, eval=TRUE, fig.width=6, fig.height=3}
+# ```{r, eval=TRUE, fig.width=6, fig.height=3}
 
-heatmap_large <- stations_diff %>%
-  filter(dayofweek == 5) %>%
-  filter(hour == 8 | hour == 9)
+# heatmap_large <- stations_diff %>%
+#   filter(dayofweek == 5) %>%
+#   filter(hour == 8 | hour == 9)
 
-# ggmap(map12, darken = darken) +
-ggplot() +
-  geom_point(
-    data = heatmap_large,
-    aes(x = lng, y = lat, color = log_diff), alpha = alpha
-  ) +
-  map_color_scale +
-  theme_no_axis_labels
-# facet_wrap(~is_member, labeller = labeller(is_member = member_labeller))
+# # ggmap(map12, darken = darken) +
+# ggplot() +
+#   geom_point(
+#     data = heatmap_large,
+#     aes(x = lng, y = lat, color = log_diff), alpha = alpha
+#   ) +
+#   map_color_scale +
+#   theme_no_axis_labels
+# # facet_wrap(~is_member, labeller = labeller(is_member = member_labeller))
 ```
 
 
@@ -477,58 +475,62 @@ Let's look at the same pattern across the entire week.
 
 ### Morning (8-9am)
 
-```{r, eval=TRUE, fig.height=3}
-heatmap1 <- stations_diff %>%
-  filter(hour == 8)
+# ```{r, eval=TRUE, fig.height=3}
+# heatmap1 <- stations_diff %>%
+#   filter(hour == 8)
 
-# ggmap(map13, darken = darken) +
-ggplot() +
-  geom_point(
-    data = heatmap1,
-    aes(x = lng, y = lat, color = log_diff), alpha = alpha
-  ) +
-  map_color_scale +
-  theme_no_axis_labels +
-  facet_grid(is_member ~ dayofweek, labeller = labeller(dayofweek = weekday_labeller, is_member = member_labeller))
-```
+# # ggmap(map13, darken = darken) +
+# ggplot() +
+#   geom_point(
+#     data = heatmap1,
+#     aes(x = lng, y = lat, color = log_diff), alpha = alpha
+#   ) +
+#   map_color_scale +
+#   theme_no_axis_labels +
+#   facet_grid(is_member ~ dayofweek, labeller = labeller(dayofweek = weekday_labeller, is_member = member_labeller))
+# ```
 
 A distinct weekday pattern. Apart from volume, the "fingerprints" look similar for the two groups. On weekends it looks different: there isn't a lot of casual riding into this area in the morning.
 
 
 ### Afternoon (4-5pm)
 
-```{r, eval=TRUE, fig.height=3}
-heatmap2 <- stations_diff %>%
-  filter(hour == 16)
+# ```{r, eval=TRUE, fig.height=3}
+# heatmap2 <- stations_diff %>%
+#   filter(hour == 16)
 
-# ggmap(map13, darken = darken) +
-ggplot() +
-  geom_point(
-    data = heatmap2,
-    aes(x = lng, y = lat, color = log_diff), alpha = alpha
-  ) +
-  map_color_scale +
-  theme_no_axis_labels +
-  facet_grid(is_member ~ dayofweek, labeller = labeller(dayofweek = weekday_labeller, is_member = member_labeller))
-```
+# # ggmap(map13, darken = darken) +
+# ggplot() +
+#   geom_point(
+#     data = heatmap2,
+#     aes(x = lng, y = lat, color = log_diff), alpha = alpha
+#   ) +
+#   map_color_scale +
+#   theme_no_axis_labels +
+#   facet_grid(is_member ~ dayofweek, labeller = labeller(dayofweek = weekday_labeller, is_member = member_labeller))
+# ```
 
 More dispersion away from center (TODO).
 Key takeaway: patterns are distinct by time of day and weekday vs weekend, but less so between C and M.
+
+-->
 
 ---
 
 ## Conclusions
 
-1. Casual riders use the service as more of a luxury, and members as a utility.
-  - Weekend spike
-  - Ride duration: starting a ride is a bigger commitment for a casual user. A 15-minute ride is a non-issue for a member, but not if you are paying for a single pass.
-  - The distinctions are not due to any inherent difference between rider types, but due to the convenience factor. (Running errands, commuting.) 
+### 1. Casual riders use the service as more of a luxury, and members as a utility.
 
-1. The two groups usage patterns overlap.
-  - Similar geographic patterns, hourly patterns, weekday vs weekend
-* Commuting, daily tasks?
-* Similarities M vs C? Modes (work hours vs weekend)
-* Lower variance for M than C. More consistent patterns.
+   - Weekend spike
+   - Ride duration: starting a ride is a bigger commitment for a casual user. A 15-minute ride is a non-issue for a member, but not if you are paying for a single pass.
+   - The distinctions are not due to any inherent difference between rider types, but due to the convenience factor. (Running errands, commuting.) Barrier to entry is higher for C than M.
+
+### 2. The two groups' usage patterns overlap.
+
+   - Similar geographic patterns, hourly patterns, weekday vs weekend
+     * Commuting, daily tasks?
+     * Similarities M vs C? Modes (work hours vs weekend)
+     * Lower variance for M than C. More consistent patterns.
 
 ---
 
@@ -536,23 +538,23 @@ Key takeaway: patterns are distinct by time of day and weekday vs weekend, but l
 
 How to convert casual riders into members?
 
-Recommendations:
+### 1. Nudge casual riders toward memberships with free trials
 
-1. Turn a single pass into a free weekly or monthly trial.
-  - Have they had a chance or reason to consider Cyclistic as a realistic, always-available mode of transport?
+- Turn a single pass into a free weekly or monthly trial.
+- Have they had a chance or reason to consider Cyclistic as a realistic, always-available mode of transport?
+- The pool of casual riders is the first potential market for memberships.
+- This pool, however, is potentially smaller than the existing Membership base.
 
-2. The pool of casual riders is the first potential market for memberships.
-  - Address specific modes of riding (work vs weekend)
+### 2. Address specific modes of riding
 
-3. People outside the system. Never tried the service (or cycling regularly).
-  - Why? Does their neighborhood lack docking stations?
-  - Do they need help with route planning?
+- Suggest bikes as a mode of work commute
+- Run promotions on weekends with major sporting events where cycling would help avoid traffic and parking problems
 
-* Suggest bikes as a mode of work commute
-* Check against areas underserved by public transport, consider expanding service in those areas
-* Make riding easier in colder months?
-* Weather-protected bikes?
+### 3. People outside the system. Never tried the service (or cycling regularly).
 
+- Why? Does their neighborhood lack docking stations? Underserved areas? Too far to work?
+- Do they need help with route planning?
+- Work with the city on expanding cycling routes and making cycling safer.
 
 ---
 
@@ -580,26 +582,13 @@ Data sources (incl. Google Maps, Stamen).
 
 ### C. Tools used (and not used)
 
+* Google Sheets
+* BigQuery
+* R (in VSCode)
+* knitr (PDF)
+
 ### D. Full data (weekly?)
 
----
 
-## Unused graphs
-
-### Monthly by weekday
-
-```{r, eval=FALSE}
-plot <- agg_daily_computed_weekdays %>%
-  group_by(year_month, dayofweek, IS_MEMBER) %>%
-  summarize(AVG_COUNT = mean(COUNT), AVG_DURATION = mean(AVG_DURATION))
-
-plot %>%
-  ggplot(aes(
-    x = dayofweek, y = AVG_COUNT,
-    color = IS_MEMBER, size = AVG_DURATION
-  )) +
-  geom_point(alpha = 0.8) +
-  facet_wrap(~year_month, ncol = 3)
-```
 
 
