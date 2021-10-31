@@ -124,6 +124,7 @@ agg_monthly <- read.csv("agg_monthly_status.csv")
 agg_weekly_status <- read.csv("agg_weekly_status.csv")
 agg_monthly_type_status <- read.csv("agg_monthly_type_status.csv")
 weather_correlations <- read.csv("weather_correlations.csv")
+wx_correlations <- read.csv("wx_correlations.csv")
 
 agg_daily_trips_weather <- read.csv("agg_daily_trips_weather.csv")
 agg_daily_trips_weather$day <- as.Date(agg_daily_trips_weather$day)
@@ -157,7 +158,7 @@ This report is the capstone project for the Google Data Analytics professional c
 
 ## Data
 
-Our main dataset contains individual ride records over a twelve-month period—October 2020 to September 2021, inclusive—provided in monthly .csv files. [**[1]**](#links). This amounts to over 5 million rows with these columns:
+Our main dataset contains individual ride records over a twelve-month period—October 2020 to September 2021, inclusive—provided in monthly .csv files [**[1]**](#links). This amounts to over 5 million rows with these columns:
 
 * unique ride ID;
 * status (member or casual)
@@ -342,14 +343,21 @@ df %>%
 ```
 
 ```{r, eval=TRUE}
-text <- "The Pearson correlation coefficient measures how strongly two sets of data are linearly correlated, from -1 (perfect negative) to 1 (perfect positive), with 0 indicating no correlation. Here, ride count is negatively correlated with snow: the more snow, the fewer rides."
+text <- "The Pearson correlation coefficient (r) measures how strongly two sets of data are linearly correlated, from -1 (perfect negative) to 1 (perfect positive), with 0 indicating no correlation. Here, for example, ride count is negatively correlated with snow: the more snow, the fewer rides."
 
-weather_correlations %>%
-  kable_custom(caption = "Correlation (r) between weather and number of rides") %>%
+colnames <- c(" ", "Temperature", "Rain", "Snow", "Wind", "Temperature", "Rain", "Snow", "Wind")
+
+wx_correlations %>%
+  kable_custom(
+    col.names = colnames,
+    caption = "Correlation (r): ride volume vs. weather factors"
+  ) %>%
+  add_header_above(c(" " = 1, "Count" = 4, "Duration" = 4)) %>%
+  column_spec(c(2, 6), bold = TRUE) %>%
   footnote(general = text, threeparttable = TRUE, general_title = " ")
 ```
 
-Table 5 shows that the number of rides on a given day is strongly—almost perfectly—correlated with **air temperature** for both groups. The following plots help illustrate this relationship. Each circle represents one day; 365 circles for each plot; the diagonal lines represent best linear fit and confidence intervals.
+Table 5 shows that the number of rides on a given day is strongly—almost perfectly—correlated with **air temperature** for both groups; duration, on the other hand, shows almost no correlation. The following plots help illustrate this relationship. Each circle represents one day; 365 circles for each plot; the diagonal lines represent best linear fit and confidence intervals.
 
 ```{r, fig.height=2, eval=TRUE}
 
@@ -393,13 +401,9 @@ p2 <- scatterplot %>%
 grid.arrange(p1, p2, nrow = 1)
 ```
 
-**Rain** is more ambiguous: correlation is close to 0. Does this mean bike-share users in Chicago are not influenced by rain at all? The more plausible explanation is that we are at the limits of this dataset. In the 12-month period, 256 days had no recorded rain, only 16 days had half an inch or more; on those days, Members rode for 4% less total time, and Casual users 6% more, than on days with less rain. In other words, it did not rain enough to make the relationship clear.
+**Rain** is more ambiguous: correlation is close to 0. Does this mean bike-share users in Chicago are not influenced by rain at all? The more plausible explanation is that we are at the limits of this dataset. In the 12-month period, 256 days had no recorded rain, and only 16 days had half an inch or more; on those days, Members rode for 4% less total time, and Casual riders 6% more, than on days with less rain. In other words, it did not rain enough to make the relationship clear.
 
-The relationship with **Snow** is clearer, and snow itself is obviously not independent from temperature.
-
-These distributions confirms an observation from section 1: average ride duration remains nearly flat (more so for Members), but ride volume varies significantly.
-
-(Note: one outlier for Casual riders, 16 Feb 2021, was removed from the duration scatterplot as it had an average duration of over 100 minutes. More on this in the cleanup notes in the Appendix.)
+These distributions confirm an observation from section 1: average ride duration remains nearly flat (more so for Members), but ride volume can vary significantly.
 
 ### 4. Geographical
 
