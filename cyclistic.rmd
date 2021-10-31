@@ -405,22 +405,13 @@ grid.arrange(p1, p2, nrow = 1)
 
 These distributions confirm an observation from section 1: average ride duration remains nearly flat (more so for Members), but ride volume can vary significantly.
 
-### 4. Geographical
+### 4. Geographical patterns are distinct across the week
 
-(TODO)
+The source dataset contains 1288 distinct docking stations. 85% of all rides have both a start and an end station specified; in this section we focus on that subset only (the other 15% start and/or end outside of a docking station). To prevent seasonal trends from complicating the picture, the data is further filtered to four weeks in the summer (June 1st—June 28).
 
-Stations: 1288 distinct stations (saved in table). 85% of trips (4293771 out of 5051830) have both start and end station ID — we focus on those when mapping. These are split almost evenly between M (54.7%) and C.
+The following plots attempt to isolate daily and weekly patterns using a heatmap of station usage. Each dot represents a bike docking station. The metric is: _count(rides ended) – count(rides started)_, for each station, within one hour. Dark dots indicate more starts than ends, and thus an _outflow_ of bike traffic; colored dots are stations where more rides have ended than started, or an _inflow_ of traffic (redder colors indicate more arrivals, on a log scale).
 
-Stations: 4007812 trips end at a different station from start; 285959 trips start and end at the same station.
-
-### Stations
-
-**TODO** — # of rides with start & end station (85%).
-**1288** stations. Following: **casual vs members**, **8am vs 4pm**, **Monday-Friday**.
-
-Each dot is a bike docking station. Stations highlighed **yellow-red** have more arrivals than departures for the given hour, suggesting an influx of bike traffic at that location.
-
-TODO: Heatmap: instead of each weekday, take a month out of each quarter?
+In other words: _clusters of "hot" stations indicate areas that people are cycling into_.
 
 ```{r, eval=TRUE}
 
@@ -440,7 +431,7 @@ alpha <- 0.7
 
 ### Friday morning (8-10am)
 
-```{r, fig.width=6, fig.height=3, eval=TRUE}
+```{r, fig.height=3, eval=TRUE}
 
 heatmap_large <- stations_diff %>%
   filter(dayofweek == 5) %>%
@@ -450,11 +441,11 @@ ggmap(map12) +
   # ggplot() +
   geom_point(
     data = heatmap_large,
-    aes(x = lng, y = lat, fill = log_diff),
+    aes(x = lng, y = lat, color = log_diff),
     alpha = alpha,
     size = 3,
-    shape = 21,
-    color = "#313131"
+    shape = 19,
+    # color = "#313131"
   ) +
   colors_stations_diff +
   theme_no_axis_labels +
@@ -462,11 +453,10 @@ ggmap(map12) +
   theme(axis.line = element_blank())
 ```
 
-Let's look at the same pattern across the entire week.
+Let's look at the same pattern across the week (again, these are totals across a four-week time window).
 
 ### Morning (8-9am)
-
-```{r, fig.height=3, eval=TRUE}
+```{r, fig.height=2, eval=TRUE}
 heatmap1 <- stations_diff %>%
   filter(hour == 8)
 
@@ -474,11 +464,11 @@ ggmap(map12) +
   # ggplot() +
   geom_point(
     data = heatmap1,
-    aes(x = lng, y = lat, fill = log_diff),
+    aes(x = lng, y = lat, color = log_diff),
     alpha = alpha,
     size = 2,
-    shape = 21,
-    color = "#313131"
+    shape = 19,
+    # color = "#313131"
   ) +
   colors_stations_diff +
   theme_no_axis_labels +
@@ -486,12 +476,10 @@ ggmap(map12) +
   theme(axis.line = element_blank())
 ```
 
-A distinct weekday pattern. Apart from volume, the "fingerprints" look similar for the two groups. On weekends it looks different: there isn't a lot of casual riding into this area in the morning.
-
+A distinct weekday pattern emerges. Apart from ride counts (as mentioned in section 1, Members make more total rides than Casual users), the "fingerprints" look similar for the two groups. During the work week the flow is into the center of the city; on weekends the flow is more dispersed.
 
 ### Afternoon (4-5pm)
-
-```{r, fig.height=3, eval=FALSE}
+```{r, fig.height=2, eval=TRUE}
 heatmap2 <- stations_diff %>%
   filter(hour == 16)
 
@@ -499,7 +487,10 @@ ggmap(map12) +
   # ggplot() +
   geom_point(
     data = heatmap2,
-    aes(x = lng, y = lat, color = log_diff), alpha = alpha
+    aes(x = lng, y = lat, color = log_diff),
+    alpha = alpha,
+    size = 2,
+    shape = 19,
   ) +
   colors_stations_diff +
   theme_no_axis_labels +
@@ -507,8 +498,7 @@ ggmap(map12) +
   theme(axis.line = element_blank())
 ```
 
-More dispersion away from center (TODO).
-Key takeaway: patterns are distinct by time of day and weekday vs weekend, but less so between C and M.
+In the afternoon the volume of riding spikes (see also the heatmap in section 2), and also disperses away from center.
 
 ---
 
