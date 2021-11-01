@@ -14,7 +14,7 @@
 ## Final report
 
 - [PDF](./cyclistic.pdf)
-- [HTML](./cyclistic.html)
+- [Markdown](./cyclistic.md)
 
 ## Source code
 
