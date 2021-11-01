@@ -81,7 +81,7 @@ bold_larger_fn <- function(x) {
 
 weekday_ticks <- function() {
   function(x) {
-    weekday_names_short
+    weekday_names
   }
 }
 
@@ -112,18 +112,15 @@ member_labeller <- function(v) {
 }
 
 weekday_labeller <- function(v) {
-  weekday_names_short[as.numeric(v)]
+  weekday_names[as.numeric(v)]
 }
 ```
 
 ```{r data imports}
-agg_daily_computed_weekdays <- read.csv("./datasets/agg_daily_computed_weekdays.csv")
 agg_daily <- read.csv("./datasets/agg_daily_duration_count.csv")
 agg_hourly <- read.csv("./datasets/agg_hourly_status.csv")
 agg_monthly <- read.csv("./datasets/agg_monthly_status.csv")
 agg_weekly_status <- read.csv("./datasets/agg_weekly_status.csv")
-agg_monthly_type_status <- read.csv("./datasets/agg_monthly_type_status.csv")
-weather_correlations <- read.csv("./datasets/weather_correlations.csv")
 wx_correlations <- read.csv("./datasets/wx_correlations.csv")
 
 agg_daily_trips_weather <- read.csv("./datasets/agg_daily_trips_weather.csv")
@@ -134,11 +131,7 @@ agg_weekly_weather$week_start <- as.Date(agg_weekly_weather$week_start)
 
 stations_diff <- read.csv("./datasets/stations_diff_june.csv") %>% arrange(diff)
 
-weekday_names_full <- c(
-  "Monday", "Tuesday",
-  "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"
-)
-weekday_names_short <- c("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
+weekday_names <- c("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
 ```
 
 # Cyclistic
@@ -146,7 +139,7 @@ weekday_names_short <- c("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
 - **Anar Seyf** | anar.seyf@gmail.com
 - Capstone project | Google Data Analytics course #8 | Coursera
 - October 2021
-- Source code: [github.com/anarseyf/cyclistic](github.com/anarseyf/cyclistic)
+- Source code: [github.com/anarseyf/cyclistic](https://github.com/anarseyf/cyclistic)
 
 ---
 
@@ -161,11 +154,11 @@ This report is the capstone project for the Google Data Analytics professional c
 Our main dataset contains individual ride records over a twelve-month period—October 2020 to September 2021, inclusive—provided in monthly .csv files [**[2]**](#links). This amounts to over 5 million rows with these columns:
 
 * unique ride ID;
-* status (member or casual)
+* status (member or casual);
 * start and end time;
 * start and end docking station (ID and name);
 * start and end latitude/longitude;
-* bicycle type (classic, docked, electric);
+* bicycle type (classic, docked, electric).
 
 The individual records are aggregated into hourly, daily, and weekly tables, and grouped by status (member vs. casual). For example, the daily aggregates table consists of 730 entries (365 for Members and Casual riders each) with columns for average daily ride count and average duration.
 
@@ -238,7 +231,7 @@ wide <- agg_weekly_status %>%
   select(-avg_duration) %>%
   spread(dayofweek, avg_count)
 
-colnames(wide) <- c(" ", weekday_names_short)
+colnames(wide) <- c(" ", weekday_names)
 
 wide %>%
   format(big.mark = ",") %>%
@@ -255,7 +248,7 @@ wide <- agg_weekly_status %>%
   select(-avg_count) %>%
   spread(dayofweek, avg_duration)
 
-colnames(wide) <- c(" ", weekday_names_short)
+colnames(wide) <- c(" ", weekday_names)
 
 wide %>% kable_custom(caption = "Average ride duration (minutes)")
 ```
@@ -284,7 +277,7 @@ agg_hourly %>%
   facet_wrap(~IS_MEMBER, labeller = labeller(IS_MEMBER = member_labeller))
 ```
 
-### 3. Seasons affect ride volume, but average duration remains stable
+### 3. Seasons affect ride volume, but average duration remains stable.
 
 This section uses the Chicago daily weather dataset from NOAA [**[3]**](#links).
 
@@ -384,7 +377,7 @@ temp_breaks <-
 duration_breaks <- scale_y_continuous(breaks = c(20, 30, 40))
 
 scatterplot <- agg_daily_trips_weather %>%
-  filter(AVG_DURATION < 100)
+  filter(AVG_DURATION < 100) # removes 1 data point — 16 Feb 2021
 
 p1 <- scatterplot %>%
   ggplot(
@@ -428,11 +421,11 @@ grid.arrange(p1, p2, nrow = 1)
 
 These distributions confirm an observation from section 1: average ride duration remains nearly flat (more so for Members), but ride volume can vary significantly.
 
-### 4. Geographical patterns are distinct across the week
+### 4. Geographical patterns are distinct across the week.
 
 The source dataset contains 1288 distinct docking stations. 85% of all rides have both a start and an end station specified; in this section we focus on that subset only (the other 15% start and/or end outside of a docking station). To prevent seasonal trends from complicating the picture, the data is further filtered to four weeks in the summer (June 1st—June 28th).
 
-### Friday morning (8-10am)
+### Friday morning (8–10am)
 
 ```{r, eval=TRUE}
 
@@ -479,7 +472,7 @@ In other words: _clusters of "hot" stations indicate areas that people are cycli
 
 Let's look at the same pattern across the week (again, these are totals across a four-week time window).
 
-### Morning (8-9am)
+### Morning (8–9am)
 ```{r, fig.height=2, eval=TRUE}
 heatmap1 <- stations_diff %>%
   filter(hour == 8)
@@ -502,7 +495,7 @@ ggmap(map12) +
 
 A distinct weekday pattern emerges. Apart from ride counts (as mentioned in section 1, Members make more total rides than Casual users), the "fingerprints" look similar for the two groups. During the work week the flow is into the center of the city; on weekends the flow is more dispersed.
 
-### Afternoon (4-5pm)
+### Afternoon (4–5pm)
 ```{r, fig.height=2, eval=TRUE}
 heatmap2 <- stations_diff %>%
   filter(hour == 16)
@@ -528,11 +521,11 @@ In the afternoon the volume of riding spikes (see also the heatmap in section 2)
 
 ## Conclusions
 
-#### Members use the service as a utility, Casual riders as more of a luxury
+### Members use the service as a utility, Casual riders as more of a luxury.
 
 Riding a Cyclistic bike is an always-available option to members at no additional cost. If a bike is available nearby, starting a ride is a non-issue. Conversely, casual riders face an additional financial "barrier to entry" before each ride (or each day). The distinctions in usage (both ride duration and number of rides) are likely explained mainly by this distinction. A member can use the service for running small errands or commuting to work. Casual users have to be more selective in their use.
 
-#### The two groups' usage patterns overlap.
+### The two groups' usage patterns overlap.
 
 Weekly and geographical usage patterns for Members and Casual riders have enough similarities to suggest they represent essentially the same pool of people, in terms of their travel goals. Both groups ride more in late afternoon (presumably when their work day ends); both groups ride a lot on Saturday afternoon; and so on.
 

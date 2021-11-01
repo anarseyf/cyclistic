@@ -5,7 +5,7 @@
 -   Capstone project \| Google Data Analytics course #8 \| Coursera
 -   October 2021
 -   Source code:
-    [github.com/anarseyf/cyclistic](github.com/anarseyf/cyclistic)
+    [github.com/anarseyf/cyclistic](https://github.com/anarseyf/cyclistic)
 
 ------------------------------------------------------------------------
 
@@ -31,11 +31,11 @@ period—October 2020 to September 2021, inclusive—provided in monthly
 these columns:
 
 -   unique ride ID;
--   status (member or casual)
+-   status (member or casual);
 -   start and end time;
 -   start and end docking station (ID and name);
 -   start and end latitude/longitude;
--   bicycle type (classic, docked, electric);
+-   bicycle type (classic, docked, electric).
 
 The individual records are aggregated into hourly, daily, and weekly
 tables, and grouped by status (member vs. casual). For example, the
@@ -542,7 +542,7 @@ activity spilling over into early morning on Sunday.
 
 <img src="cyclistic_files/figure-gfm/unnamed-chunk-5-1.png" width="90%" />
 
-### 3. Seasons affect ride volume, but average duration remains stable
+### 3. Seasons affect ride volume, but average duration remains stable.
 
 This section uses the Chicago daily weather dataset from NOAA
 [**\[3\]**](#links).
@@ -708,7 +708,7 @@ These distributions confirm an observation from section 1: average ride
 duration remains nearly flat (more so for Members), but ride volume can
 vary significantly.
 
-### 4. Geographical patterns are distinct across the week
+### 4. Geographical patterns are distinct across the week.
 
 The source dataset contains 1288 distinct docking stations. 85% of all
 rides have both a start and an end station specified; in this section we
@@ -717,7 +717,7 @@ docking station). To prevent seasonal trends from complicating the
 picture, the data is further filtered to four weeks in the summer (June
 1st—June 28th).
 
-### Friday morning (8-10am)
+### Friday morning (8–10am)
 
 This plot isolates daily and weekly patterns using a heatmap of station
 usage.
@@ -737,7 +737,7 @@ are cycling into*.
 Let’s look at the same pattern across the week (again, these are totals
 across a four-week time window).
 
-### Morning (8-9am)
+### Morning (8–9am)
 
 ![](cyclistic_files/figure-gfm/unnamed-chunk-11-1.png)<!-- -->
 
@@ -747,7 +747,7 @@ in section 1, Members make more total rides than Casual users), the
 flow is into the center of the city; on weekends the flow is more
 dispersed.
 
-### Afternoon (4-5pm)
+### Afternoon (4–5pm)
 
 ![](cyclistic_files/figure-gfm/unnamed-chunk-12-1.png)<!-- -->
 
@@ -758,7 +758,7 @@ section 2), and also disperses away from center.
 
 ## Conclusions
 
-#### Members use the service as a utility, Casual riders as more of a luxury
+### Members use the service as a utility, Casual riders as more of a luxury.
 
 Riding a Cyclistic bike is an always-available option to members at no
 additional cost. If a bike is available nearby, starting a ride is a
@@ -769,7 +769,7 @@ mainly by this distinction. A member can use the service for running
 small errands or commuting to work. Casual users have to be more
 selective in their use.
 
-#### The two groups’ usage patterns overlap.
+### The two groups’ usage patterns overlap.
 
 Weekly and geographical usage patterns for Members and Casual riders
 have enough similarities to suggest they represent essentially the same
