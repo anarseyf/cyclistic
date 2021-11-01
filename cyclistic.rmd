@@ -35,8 +35,6 @@ loadfonts()
 
 ```{r theme}
 
-# TODO — theme_tufte? lol
-
 theme_set(theme_minimal(
   base_family = "Times",
 ))
@@ -45,7 +43,7 @@ theme_update(
   legend.position = "none",
   strip.background = element_rect(fill = "white", color = NA),
   strip.text = element_text(size = 11),
-  axis.text = element_text(size = 9),
+  axis.text = element_text(size = 11),
   axis.line = element_line(size = 0.25)
 )
 
@@ -94,7 +92,7 @@ hour_ticks <- function() {
 to_readable_hour <- function(h) {
   n <- as.numeric(h)
   if (n == 0) {
-    return("midnight")
+    return("12am")
   }
   if (n == 12) {
     return("noon")
@@ -143,7 +141,7 @@ weekday_names_short <- c("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
 
 # Cyclistic
 
-- Anar Seyf | anar.seyf@gmail.com
+- **Anar Seyf** | anar.seyf@gmail.com
 - Capstone project | Google Data Analytics course #8 | Coursera
 - October 2021
 - Source code: [github.com/anarseyf/cyclistic](github.com/anarseyf/cyclistic)
@@ -158,7 +156,7 @@ This report is the capstone project for the Google Data Analytics professional c
 
 ## Data
 
-Our main dataset contains individual ride records over a twelve-month period—October 2020 to September 2021, inclusive—provided in monthly .csv files [**[1]**](#links). This amounts to over 5 million rows with these columns:
+Our main dataset contains individual ride records over a twelve-month period—October 2020 to September 2021, inclusive—provided in monthly .csv files [**[2]**](#links). This amounts to over 5 million rows with these columns:
 
 * unique ride ID;
 * status (member or casual)
@@ -167,7 +165,11 @@ Our main dataset contains individual ride records over a twelve-month period—O
 * start and end latitude/longitude;
 * bicycle type (classic, docked, electric);
 
-The individual records are aggregated into hourly, daily, and weekly tables, and grouped by status (member vs casual). For example, the daily aggregates table consists of 730 entries (365 for Members and Casual riders each) with columns for average daily ride count and average duration. (See appendix on [**[tools used]**](#tools) and [**[data cleanup steps]**](#cleanup).)
+The individual records are aggregated into hourly, daily, and weekly tables, and grouped by status (member vs. casual). For example, the daily aggregates table consists of 730 entries (365 for Members and Casual riders each) with columns for average daily ride count and average duration.
+
+See [**Appendix**](#appendix) for details on tools used and data cleanup steps.
+
+---
 
 ## Analysis
 
@@ -188,6 +190,8 @@ colnames(wide) <- c(" ", months(as.Date(month_starts), abbreviate = TRUE))
 
 wide[, -1] <- round(wide[, -1])
 
+text <- "(In this table and in Table 3, the larger of the two numbers for each month is in italics.)"
+
 wide %>%
   format(big.mark = ",") %>%
   mutate(across(Oct:Sep, bold_larger_fn)) %>%
@@ -198,7 +202,7 @@ wide %>%
   ) %>%
   footnote(
     general_title = "",
-    general = "(In this table and in Table 3, the larger of the two numbers for each month is in italics.)"
+    general = text
   )
 ```
 
@@ -215,11 +219,12 @@ colnames(wide) <- c(" ", months(as.Date(month_starts), abbreviate = TRUE))
 
 wide[, -1] <- round(wide[, -1])
 
-wide %>%
-  kable_custom(caption = "Average ride duration (minutes)")
-```
+text <- "February has an abnormal spike in ride duration. It may be partly due to low ride volume and thus higher variance in the data, but is otherwise not readily explainable here. It is likely to be weather-related, perhaps due to difficulties of reaching a docking station."
 
-(February has an abnormal spike in ride duration. It may be partly attributable to low ride volume and thus higher variance in the data, but is otherwise not readily explainable here. It is likely to be weather-related—perhaps due to difficulties of reaching a docking station; see section 3 for more details.)
+wide %>%
+  kable_custom(caption = "Average ride duration (minutes)") %>%
+  footnote(general = text, threeparttable = TRUE)
+```
 
 ### 2. Members ride all week, casual riders prefer weekends.
 
@@ -255,9 +260,9 @@ wide %>% kable_custom(caption = "Average ride duration (minutes)")
 
 #### Hourly heatmap
 
-This heatmap is a more detailed view of the data from _Table 3_. The Monday–Friday pattern for Members closely matches standard working hours; note especially the peak around 4–5pm. Weekend patterns are much closer between the two groups, apart from volume; note, for example, Saturday evening activity spilling over into early morning on Sunday.
+A more detailed view of the data from _Table 3_. The Monday–Friday pattern for Members closely matches standard working hours; note especially the peak around 4–5pm. Weekend patterns are closer between the two groups, apart from volume; note, for example, Saturday evening activity spilling over into early morning on Sunday.
 
-```{r, fig.width=8, fig.height=3, eval=FALSE}
+```{r, fig.width=8, fig.height=3, out.width='90%', eval=TRUE}
 
 agg_hourly %>%
   ggplot(aes(
@@ -274,15 +279,14 @@ agg_hourly %>%
   # ) +
   scale_x_continuous(labels = weekday_ticks(), breaks = 1:7, expand = c(0, 0)) +
   scale_y_discrete(labels = hour_ticks(), breaks = seq(0, 23, 4)) +
-  facet_wrap(~IS_MEMBER, labeller = labeller(IS_MEMBER = member_labeller)) +
-  labs(caption = "Ride count heatmap (time of day on vertical axis)")
+  facet_wrap(~IS_MEMBER, labeller = labeller(IS_MEMBER = member_labeller))
 ```
 
 ### 3. Seasons affect ride volume, but average duration remains stable
 
-This section uses the Chicago daily weather dataset from NOAA; see [**[Links]**](#links) for data source.
+This section uses the Chicago daily weather dataset from NOAA [**[3]**](#links).
 
-The following chart plots one year of ride data, aggregated by week, against weather for that week: average daily air temperature, cumulative rain, and cumulative snow.
+The following chart plots one year of ride data, aggregated by week, against weather for that week: average daily air temperature (background colors), cumulative rain, and cumulative snow.
 
 ```{r, fig.width=10, fig.height=3, eval=TRUE}
 
@@ -290,14 +294,15 @@ month_labels <- function(x) {
   months(x, abbreviate = TRUE)
 }
 
-df <- agg_weekly_weather
+df <- agg_weekly_weather %>%
+  mutate(is_member = ifelse(is_member, "Member", "Casual"))
 
 df %>%
   ggplot(aes(x = week_start)) +
   geom_bar(aes(y = Inf, fill = avg_temp),
-    stat = "identity", alpha = 0.3, position = "dodge"
+    stat = "identity", alpha = 0.4, position = "dodge"
   ) +
-  scale_fill_viridis_c(option = "magma") +
+  scale_fill_viridis_c(option = "inferno", name = "Temp. \u00B0C") +
   new_scale_fill() +
   # new_scale_color() +
 
@@ -321,6 +326,7 @@ df %>%
   stroke = 2
   ) +
   colors_IS_MEMBER +
+  guides(color = guide_legend(title = ""), fill = "none") +
   scale_fill_manual(values = c("white", "darkgreen")) +
 
   # new_scale_fill() +
@@ -328,18 +334,25 @@ df %>%
 
   geom_point(
     data = subset(df, total_snow > 0),
-    aes(y = -2000, size = total_snow / 10), shape = 23, fill = "#9b037a", alpha = 0.7
+    aes(y = -2000, size = total_snow / 10), shape = 23, fill = "#9b037a", alpha = 0.7,
+    show.legend = FALSE
   ) +
-  guides(size = guide_legend(title = "Snow (mm)")) +
+  # guides(size = guide_legend(title = "Snow (mm)")) +
   geom_point(
     data = subset(df, total_rain > 0),
-    aes(y = -1000, size = total_rain), color = "#2192d3", alpha = 0.7
+    aes(y = -1000, size = total_rain),
+    color = "#2192d3", alpha = 0.7,
+    show.legend = FALSE
   ) +
   scale_x_date(expand = c(0, 0), labels = month_labels, date_breaks = "months") +
   scale_y_continuous(expand = c(0, 1000)) +
   geom_vline(xintercept = as.Date("2021-01-01"), size = 0.5) +
-  theme(legend.position = "right") +
-  labs(caption = "Weather Oct 2020-Sep 2021. Background = avg temp, etc.")
+  # labs(title = "Ride count vs. weather factors") +
+  theme(
+    legend.position = "right",
+    axis.text = element_text(size = 13),
+    plot.caption = element_text(size = 15)
+  )
 ```
 
 ```{r, eval=TRUE}
@@ -354,7 +367,7 @@ wx_correlations %>%
   ) %>%
   add_header_above(c(" " = 1, "Count" = 4, "Duration" = 4)) %>%
   column_spec(c(2, 6), bold = TRUE) %>%
-  footnote(general = text, threeparttable = TRUE, general_title = " ")
+  footnote(general = text, threeparttable = TRUE)
 ```
 
 Table 5 shows that the number of rides on a given day is strongly—almost perfectly—correlated with **air temperature** for both groups; duration, on the other hand, shows almost no correlation. The following plots help illustrate this relationship. Each circle represents one day; 365 circles for each plot; the diagonal lines represent best linear fit and confidence intervals.
@@ -382,7 +395,11 @@ p1 <- scatterplot %>%
   temp_breaks +
   facet_wrap(~IS_MEMBER, labeller = labeller(IS_MEMBER = member_labeller)) +
   labs(caption = "Air temperature (\u00B0C) vs. number of rides") +
-  guides(color = "none")
+  guides(color = "none") +
+  theme(
+    axis.text = element_text(size = 9),
+    plot.caption = element_text(size = 10)
+  )
 
 p2 <- scatterplot %>%
   ggplot(aes(x = temp_avg, y = AVG_DURATION, color = IS_MEMBER)) +
@@ -396,7 +413,11 @@ p2 <- scatterplot %>%
   labs(
     caption = "Air temperature (\u00B0C) vs. ride duration (minutes)",
   ) +
-  guides(color = "none")
+  guides(color = "none") +
+  theme(
+    axis.text = element_text(size = 9),
+    plot.caption = element_text(size = 10)
+  )
 
 grid.arrange(p1, p2, nrow = 1)
 ```
@@ -409,9 +430,7 @@ These distributions confirm an observation from section 1: average ride duration
 
 The source dataset contains 1288 distinct docking stations. 85% of all rides have both a start and an end station specified; in this section we focus on that subset only (the other 15% start and/or end outside of a docking station). To prevent seasonal trends from complicating the picture, the data is further filtered to four weeks in the summer (June 1st—June 28th).
 
-The following plots attempt to isolate daily and weekly patterns using a heatmap of station usage. Each dot represents a bike docking station. The metric is: _count(rides ended) – count(rides started)_, for each station, within one hour. Dark dots indicate more starts than ends, and thus an _outflow_ of bike traffic; colored dots are stations where more rides have ended than started, or an _inflow_ of traffic (redder colors indicate more arrivals, on a log scale).
-
-In other words: _clusters of "hot" stations indicate areas that people are cycling into_.
+### Friday morning (8-10am)
 
 ```{r, eval=TRUE}
 
@@ -424,12 +443,11 @@ stations_diff$log_diff[index] <- log10(stations_diff$diff[index])
 stations_diff$log_diff[stations_diff$diff <= 0] <- NA
 
 map12 <- get_map(location = chicago_long_lat, zoom = 12, maptype = "toner-lite")
-# map13 <- get_map(location = "Chicago", zoom = 13, maptype = "toner-lite")
 
 alpha <- 0.7
 ```
 
-### Friday morning (8-10am)
+This plot isolates daily and weekly patterns using a heatmap of station usage.
 
 ```{r, fig.height=3, eval=TRUE}
 
@@ -452,6 +470,10 @@ ggmap(map12) +
   facet_wrap(~is_member, labeller = labeller(is_member = member_labeller)) +
   theme(axis.line = element_blank())
 ```
+
+Each dot represents a bike docking station. The metric is: _count(rides ended) – count(rides started)_, for each station, within one hour. Dark dots indicate more starts than ends, and thus an _outflow_ of bike traffic; colored dots are stations where more rides have ended than started, or an _inflow_ of traffic (redder colors indicate more arrivals, on a log scale).
+
+In other words: _clusters of "hot" stations indicate areas that people are cycling into_.
 
 Let's look at the same pattern across the week (again, these are totals across a four-week time window).
 
@@ -504,11 +526,11 @@ In the afternoon the volume of riding spikes (see also the heatmap in section 2)
 
 ## Conclusions
 
-### 1. Members use the service as a utility, Casual riders as more of a luxury
+#### Members use the service as a utility, Casual riders as more of a luxury
 
 Riding a Cyclistic bike is an always-available option to members at no additional cost. If a bike is available nearby, starting a ride is a non-issue. Conversely, casual riders face an additional financial "barrier to entry" before each ride (or each day). The distinctions in usage (both ride duration and number of rides) are likely explained mainly by this distinction. A member can use the service for running small errands or commuting to work. Casual users have to be more selective in their use.
 
-### 2. The two groups' usage patterns overlap.
+#### The two groups' usage patterns overlap.
 
 Weekly and geographical usage patterns for Members and Casual riders have enough similarities to suggest they represent essentially the same pool of people, in terms of their travel goals. Both groups ride more in late afternoon (presumably when their work day ends); both groups ride a lot on Saturday afternoon; and so on.
 
@@ -520,15 +542,16 @@ How to convert existing casual riders into members?
 
 ### 1. Nudge casual riders toward memberships with free trials
 
-Make it easy for casual users to consider Cyclistic as a regular transportation option. To make this effortless, consider removing the barrier to entry and making the experience frictionless. For example, automatically turn a single pass into a free weekly or monthly trial of the membership, send out a promotion for such a trial, or advertise specific days when these trials will be offered.
+Make it easy for casual users to consider Cyclistic as a regular transportation option. Consider removing the main barriers to entry by allowing them to temporarily gain membership privileges—automatically and free of charge. For example, turn a single pass into a free weekly or monthly trial of the membership, send out a promotion for such a trial, or advertise specific days when these trials will be offered.
 
 ### 2. Address specific modes of riding
 
 This analysis suggests the presence of several modes of riding for each group. The next step is to drill down further and tease out specific modes and use cases, as well as those currently not feasible or not considered. Examples:
 
-- Riding to major sporting events on weekends and avoiding parking problems;
-- Riding every day during a specific time window;
+- Riding to major sporting events on weekends and avoiding parking problems
+- Riding every day during a specific time window
 - Riding longer distances (does the electric bike hold enough charge?)
+- Riding combined with other modes of transport
 
 ### 3. Understand obstacles to regular riding and help remove them
 
@@ -536,58 +559,53 @@ Find out if a subset of Casual riders want to become members, but cannot due to 
 
 ---
 
-## Appendix
+## Appendix {#appendix}
 
-### Limitations
+### Limitations and scope
 
-The available dataset is limited. It does not, for example, contain any membership data, so seasonal trends could be partly attributable to membership growth, etc.
+The available dataset does not contain any individual ridership data or any information on cohorts; seasonal trends could be in part attributable to membership growth.
 
-### Out of scope
-
-Out of scope: 
-
-* bike types; 
-* other factors (natural disasters, sporting events, etc.); 
-* pricing; 
-* individual user profiles
-* trends (year-over-year, electric, geography, etc.)
-* other modes of transport
-* region specifics
+Factors out of scope for this study: bike types; external factors beyond weather (natural disasters, sporting events, road closures); pricing; individual user profiles; year-over-year trends; other modes of transport; neighborhood specifics.
 
 ### Data cleanup {#cleaning}
 
-February: 16-Feb-2021 had a few rides of close to 24 hours. 
-Overall, most long rides (12+ hours) are attributed to Casual riders, which likely corresponds to 24-hour rentals. Not enough info to interpret this further.
-Test data; NOTES FROM GOOGLE DOC
+The following entries were removed:
 
-Presentation: log scale.
+* Entries with ride duration of less than 1 minute or negative (end time before start time);
+* Entries with ride duration of over 24 hours;
+* A few entries that appeared to be test data;
+* (for the plots in section 4 only) A single outlier, 16 Feb 2021, with an abnormally high average duration.
 
+The cleaned result contained 5,051,830 entries, down from 5,136,261 in the source.
+
+Heatmaps use logarithmic scales to present values differing by several orders of magnitude.
+
+### Tools used {#tools}
+
+1. **Terminal (zsh)**
+   - Download and unzip source data files, calculate lines, concatenate into a single file.
+
+2. **Google Sheets**
+   - Initial exploration of a small subset of the data; sample pivot tables. Google Sheets has a limitation of 5 million _cells_ (not rows) per sheet, so analyzing the full dataset there was not realistic. 
+
+3. **BigQuery** and **SQL**
+   - Loaded the full dataset into Google Cloud Platform's BigQuery;  analyzed and built aggregates using SQL.
+
+4. **R programming language**
+   - Plot generation and final data manipulation.
+
+5. **rmarkdown** and **knitr**
+   - Compilation of the report as PDF and HTML.
 
 ### Links {#links}
 
-Data sources (incl. Google Maps, Stamen).
-
 1. Coursera — Google Data Analytics
    - https://www.coursera.org/professional-certificates/google-data-analytics
-1. BigQuery
-   - https://cloud.google.com/bigquery
-1. Dataset
+1. Source data from Divvy
    - https://divvy-tripdata.s3.amazonaws.com/index.html
 1. NOAA Chicago daily weather. Collected at O'Hare Airport.
    - https://www.ncdc.noaa.gov/cdo-web/datasets/GHCND/stations/GHCND:USW00094846/detail
+1. BigQuery
+   - https://cloud.google.com/bigquery
 1. Pearson correlation coefficient
    - https://en.wikipedia.org/wiki/Pearson_correlation_coefficient
-
-### Tools {#tools}
-
-* Google Sheets
-* BigQuery
-* R (in VSCode)
-* knitr (PDF)
-(links TODO)
-
-
-
-
-
-
