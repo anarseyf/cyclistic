@@ -1,6 +1,6 @@
 # Cyclistic
 
-Capstone project for the _Google Data Analytics_ professional certificate on Coursera. Completed in October 2021: [Completion certificate](https://www.coursera.org/account/accomplishments/specialization/certificate/GCFEMDV7KRFD).
+Capstone project for the [Google Data Analytics](https://www.coursera.org/professional-certificates/google-data-analytics) professional certificate on Coursera. Completed in October 2021: [Completion certificate](https://www.coursera.org/account/accomplishments/specialization/certificate/GCFEMDV7KRFD).
 
 ## Final report
 
