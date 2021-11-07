@@ -17,3 +17,7 @@ Capstone project for the [Google Data Analytics](https://www.coursera.org/profes
 - **BigQuery** to store the dataset (5 million rows) and run **SQL** queries;
 - **R + VScode** to build visualizations;
 - **knitr** to compile the reports.
+
+## TODO
+
+- Add SQL queries
