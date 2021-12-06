@@ -4,12 +4,12 @@ Capstone project for the [Google Data Analytics](https://www.coursera.org/profes
 
 ## Final report
 
-- [PDF](./cyclistic.pdf)
+- [cyclistic.PDF](./cyclistic.pdf)
 <!-- - [Markdown](./cyclistic.md) -->
 
 ## Source code
 
-- [cyclistic.rmd](./cyclistic.rmd)
+- [cyclistic.RMD](./cyclistic.rmd)
 
 ## Tools
 
