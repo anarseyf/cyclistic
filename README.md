@@ -5,7 +5,7 @@ Capstone project for the [Google Data Analytics](https://www.coursera.org/profes
 ## Final report
 
 - [PDF](./cyclistic.pdf)
-- [Markdown](./cyclistic.md)
+<!-- - [Markdown](./cyclistic.md) -->
 
 ## Source code
 
